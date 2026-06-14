@@ -184,14 +184,14 @@ export default function Ticket() {
   async function updateStatus() {
     if (data && data.ticket && data.ticket.locked) return;
 
-    const res = await fetch(`/api/v1/ticket/status/update`, {
+    const res = await fetch(`/api/v1/ticket/state/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        status: !data.ticket.state?.isResolved,
+        resolved: !data.ticket.state?.isResolved,
         id,
       }),
     }).then((res) => res.json());
@@ -640,7 +640,7 @@ export default function Ticket() {
   };
 
   async function updateTicketStatus(e: any, ticket: any) {
-    await fetch(`/api/v1/ticket/status/update`, {
+    await fetch(`/api/v1/ticket/state/update`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -648,7 +648,7 @@ export default function Ticket() {
       },
       body: JSON.stringify({
         id: ticket.id,
-        status: !ticket.state?.isResolved,
+        resolved: !ticket.state?.isResolved,
       }),
     })
       .then((res) => res.json())

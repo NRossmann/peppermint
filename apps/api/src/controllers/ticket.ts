@@ -535,17 +535,8 @@ export function ticketRoutes(fastify: FastifyInstance) {
       preHandler: requirePermission(["issue::update"]),
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const {
-        id,
-        note,
-        detail,
-        title,
-        priority,
-        status,
-        isComplete,
-        stateId,
-        client,
-      }: any = request.body;
+      const { id, note, detail, title, priority, stateId, client }: any =
+        request.body;
 
       const user = await checkSession(request);
 
@@ -565,16 +556,9 @@ export function ticketRoutes(fastify: FastifyInstance) {
         });
       }
 
-      let nextState = await resolveTicketStateIdentifier({ stateId, status });
+      let nextState = await resolveTicketStateIdentifier({ stateId });
 
-      if (!nextState && typeof isComplete === "boolean") {
-        nextState = await getTicketStateForResolution(isComplete);
-      }
-
-      if (
-        (stateId || status || typeof isComplete === "boolean") &&
-        !nextState
-      ) {
+      if (stateId && !nextState) {
         return reply.status(400).send({
           success: false,
           message: "Invalid ticket state",
@@ -810,23 +794,50 @@ export function ticketRoutes(fastify: FastifyInstance) {
     },
   );
 
-  // Update status of a ticket
+  // Update ticket state
   fastify.put(
-    "/api/v1/ticket/status/update",
+    "/api/v1/ticket/state/update",
     {
       preHandler: requirePermission(["issue::update"]),
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { status, id }: any = request.body;
+      const { stateId, resolved, id }: any = request.body;
 
       const user = await checkSession(request);
 
-      const nextState = await getTicketStateForResolution(Boolean(status));
+      if (!stateId && typeof resolved !== "boolean") {
+        return reply.status(400).send({
+          success: false,
+          message: "stateId or resolved is required",
+        });
+      }
+
+      const nextState = stateId
+        ? await resolveTicketStateIdentifier({ stateId })
+        : await getTicketStateForResolution(Boolean(resolved));
 
       if (!nextState) {
         return reply.status(400).send({
           success: false,
-          message: "No ticket state available for this resolution state",
+          message: stateId
+            ? "Invalid ticket state"
+            : "No ticket state available for this resolution state",
+        });
+      }
+
+      const existingTicket = await prisma.ticket.findUnique({
+        where: { id: id },
+        include: {
+          state: {
+            select: ticketStateSelect,
+          },
+        },
+      });
+
+      if (!existingTicket) {
+        return reply.status(404).send({
+          success: false,
+          message: "Ticket not found",
         });
       }
 
@@ -842,11 +853,15 @@ export function ticketRoutes(fastify: FastifyInstance) {
         },
       });
 
-      await activeStatusNotification(ticket, user, status);
+      if (existingTicket.state?.id !== nextState.id) {
+        await statusUpdateNotification(existingTicket, user, nextState.name);
+      }
 
-      await sendTicketStatus(ticket);
-
-      await sendResolvedStatusWebhook(ticket, Boolean(status));
+      if (existingTicket.state?.isResolved !== nextState.isResolved) {
+        await activeStatusNotification(ticket, user, nextState.isResolved);
+        await sendTicketStatus(ticket);
+        await sendResolvedStatusWebhook(ticket, nextState.isResolved);
+      }
 
       reply.send({
         success: true,

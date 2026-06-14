@@ -1,5 +1,6 @@
 import { Button } from "@/shadcn/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shadcn/ui/card";
+import { toast } from "@/shadcn/hooks/use-toast";
 import { Input } from "@/shadcn/ui/input";
 import { getCookie } from "cookies-next";
 import { useEffect, useState } from "react";
@@ -36,6 +37,17 @@ export default function AdminStates() {
     });
 
     const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: data.message || "Failed to load states",
+      });
+      setLoading(false);
+      return;
+    }
+
     setStates(data.states || []);
     setLoading(false);
   }
@@ -43,7 +55,7 @@ export default function AdminStates() {
   async function saveState(state: typeof emptyState | TicketState) {
     const isExisting = "id" in state;
 
-    await fetch(
+    const response = await fetch(
       isExisting
         ? `/api/v1/ticket-states/${state.id}`
         : "/api/v1/ticket-states",
@@ -63,6 +75,22 @@ export default function AdminStates() {
       },
     );
 
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: data.message || "Failed to save state",
+      });
+      return;
+    }
+
+    toast({
+      title: isExisting ? "State updated" : "State created",
+      description: `${state.name} was saved successfully.`,
+    });
+
     if (!isExisting) {
       setDraft(emptyState);
     }
@@ -71,11 +99,27 @@ export default function AdminStates() {
   }
 
   async function deleteState(id: string) {
-    await fetch(`/api/v1/ticket-states/${id}`, {
+    const response = await fetch(`/api/v1/ticket-states/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${getCookie("session")}`,
       },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: data.message || "Failed to delete state",
+      });
+      return;
+    }
+
+    toast({
+      title: "State deleted",
+      description: "The state was deleted successfully.",
     });
 
     fetchStates();

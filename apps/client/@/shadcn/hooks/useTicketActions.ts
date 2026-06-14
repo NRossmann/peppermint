@@ -44,7 +44,7 @@ export function useTicketActions(token: string, refetch: () => void) {
 
   const updateTicketStatus = async (ticket: Ticket) => {
     try {
-      const response = await fetch(`/api/v1/ticket/status/update`, {
+      const response = await fetch(`/api/v1/ticket/state/update`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -52,7 +52,7 @@ export function useTicketActions(token: string, refetch: () => void) {
         },
         body: JSON.stringify({
           id: ticket.id,
-          status: !ticket.state?.isResolved,
+          resolved: !ticket.state?.isResolved,
         }),
       });
 

@@ -29,13 +29,11 @@ export type Ticket = {
   note?: string | null;
   priority: string;
   type: string;
-  status: string;
   stateId: string;
   state: TicketState;
   createdAt: string;
   team?: Team;
   assignedTo?: User;
-  isComplete: boolean;
 };
 
 export type KanbanColumn = {

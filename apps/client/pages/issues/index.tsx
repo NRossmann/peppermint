@@ -5,6 +5,7 @@ import ViewSettings from "@/shadcn/components/tickets/ViewSettings";
 import { useTicketActions } from "@/shadcn/hooks/useTicketActions";
 import { useTicketFilters } from "@/shadcn/hooks/useTicketFilters";
 import { useTicketView } from "@/shadcn/hooks/useTicketView";
+import { TicketState } from "@/shadcn/types/tickets";
 import { getCookie } from "cookies-next";
 import { Loader } from "lucide-react";
 import useTranslation from "next-translate/useTranslation";
@@ -28,6 +29,8 @@ export default function Tickets() {
 
   const token = getCookie("session");
   const user = useUser();
+  const [users, setUsers] = useState<any[]>([]);
+  const [states, setStates] = useState<TicketState[]>([]);
 
   // Fetch tickets data
   const { data, status, refetch } = useQuery(
@@ -61,7 +64,7 @@ export default function Tickets() {
     kanbanColumns,
     uiSettings,
     handleUISettingChange,
-  } = useTicketView(filteredTickets);
+  } = useTicketView(filteredTickets, states);
 
   const {
     updateTicketStatus,
@@ -87,14 +90,7 @@ export default function Tickets() {
     );
   }, [selectedPriorities, selectedStatuses, selectedAssignees]);
 
-  const [users, setUsers] = useState<any[]>([]);
-  const statusOptions: string[] = Array.from(
-    new Set(
-      (data?.tickets || [])
-        .map((ticket) => ticket.state?.name)
-        .filter((value): value is string => Boolean(value)),
-    ),
-  );
+  const statusOptions: string[] = states.map((state) => state.name);
 
   async function fetchUsers() {
     await fetch(`/api/v1/users/all`, {
@@ -112,8 +108,25 @@ export default function Tickets() {
       });
   }
 
+  async function fetchStates() {
+    await fetch(`/api/v1/ticket-states`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setStates(res.states || []);
+        }
+      });
+  }
+
   useEffect(() => {
     fetchUsers();
+    fetchStates();
   }, []);
 
   // Add this to the useEffect that saves preferences

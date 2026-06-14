@@ -208,7 +208,7 @@ export default function Tickets() {
   }
 
   async function updateTicketStatus(e: any, ticket: any) {
-    await fetch(`/api/v1/ticket/status/update`, {
+    await fetch(`/api/v1/ticket/state/update`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -216,7 +216,7 @@ export default function Tickets() {
       },
       body: JSON.stringify({
         id: ticket.id,
-        status: !ticket.state?.isResolved,
+        resolved: !ticket.state?.isResolved,
       }),
     })
       .then((res) => res.json())

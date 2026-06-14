@@ -3,12 +3,16 @@ import {
   KanbanGrouping,
   SortOption,
   Ticket,
+  TicketState,
   UISettings,
   ViewMode,
 } from "@/shadcn/types/tickets";
 import { useEffect, useState } from "react";
 
-export function useTicketView(tickets: Ticket[] = []) {
+export function useTicketView(
+  tickets: Ticket[] = [],
+  availableStates: TicketState[] = [],
+) {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem("preferred_view_mode");
     return (saved as ViewMode) || "list";
@@ -77,31 +81,24 @@ export function useTicketView(tickets: Ticket[] = []) {
   const kanbanColumns = (() => {
     switch (kanbanGrouping) {
       case "status":
-        return sortedTickets
-          .reduce((columns, ticket) => {
-            const state = ticket.state;
-            if (!state) return columns;
-
-            const existing = columns.find((column) => column.id === state.slug);
-            if (existing) {
-              existing.tickets.push(ticket);
-              return columns;
-            }
-
-            columns.push({
-              id: state.slug,
-              title: state.name,
-              color: state.color || "bg-gray-500",
-              tickets: [ticket],
-              droppable: true,
-              order: state.order,
-              state,
-            });
-
-            return columns;
-          }, [] as KanbanColumn[])
+        return availableStates
+          .map((state) => ({
+            id: state.slug,
+            title: state.name,
+            color: state.color || "bg-gray-500",
+            tickets: sortedTickets.filter(
+              (ticket) => ticket.stateId === state.id,
+            ),
+            droppable: true,
+            order: state.order,
+            state,
+          }))
           .sort((a, b) => (a.order || 0) - (b.order || 0))
-          .map(({ order, ...column }) => column);
+          .map(({ order, ...column }) => column)
+          .filter((column, index, columns) => {
+            return columns.findIndex((item) => item.id === column.id) === index;
+          });
+
       case "priority":
         return [
           {

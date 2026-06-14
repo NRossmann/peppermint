@@ -22,8 +22,18 @@ export function slugifyTicketState(input: string) {
 }
 
 export async function getDefaultTicketState() {
-  return prisma.ticketState.findFirst({
+  const preferredState = await prisma.ticketState.findFirst({
     where: { slug: DEFAULT_TICKET_STATE_SLUG },
+    select: ticketStateSelect,
+  });
+
+  if (preferredState) {
+    return preferredState;
+  }
+
+  return prisma.ticketState.findFirst({
+    where: { isResolved: false },
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     select: ticketStateSelect,
   });
 }
@@ -51,18 +61,10 @@ export async function getTicketStateForResolution(isResolved: boolean) {
 
 export async function resolveTicketStateIdentifier(input: {
   stateId?: string | null;
-  status?: string | null;
 }) {
   if (input.stateId) {
     return prisma.ticketState.findUnique({
       where: { id: input.stateId },
-      select: ticketStateSelect,
-    });
-  }
-
-  if (input.status) {
-    return prisma.ticketState.findFirst({
-      where: { slug: input.status },
       select: ticketStateSelect,
     });
   }
@@ -90,7 +92,5 @@ export function serializeTicket(ticket: any) {
     ...ticket,
     state,
     stateId: ticket.stateId,
-    status: state?.slug || null,
-    isComplete: state?.isResolved || false,
   };
 }

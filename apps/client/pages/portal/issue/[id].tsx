@@ -59,14 +59,14 @@ export default function Ticket() {
   let file: any = [];
 
   async function updateStatus() {
-    await fetch(`/api/v1/ticket/status/update`, {
+    await fetch(`/api/v1/ticket/state/update`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        status: !data.ticket.state?.isResolved,
+        resolved: !data.ticket.state?.isResolved,
         id,
       }),
     })
