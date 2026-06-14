@@ -5,6 +5,7 @@ import {
   Ticket,
   TicketState,
   UISettings,
+  User,
   ViewMode,
 } from "@/shadcn/types/tickets";
 import { useEffect, useState } from "react";
@@ -38,6 +39,7 @@ function titleize(value: string) {
 export function useTicketView(
   tickets: Ticket[] = [],
   availableStates: TicketState[] = [],
+  availableUsers: User[] = [],
 ) {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem("preferred_view_mode");
@@ -128,7 +130,10 @@ export function useTicketView(
       case "priority":
         const priorityOrder = ["high", "medium", "normal", "low"];
         const priorities = Array.from(
-          new Set(sortedTickets.map((t) => t.priority.toLowerCase())),
+          new Set([
+            ...priorityOrder,
+            ...sortedTickets.map((t) => t.priority.toLowerCase()),
+          ]),
         ).sort((a, b) => {
           const aIndex = priorityOrder.indexOf(a);
           const bIndex = priorityOrder.indexOf(b);
@@ -148,19 +153,26 @@ export function useTicketView(
           value: priority,
         }));
       case "type":
-        return Array.from(new Set(sortedTickets.map((t) => t.type))).map(
-          (type) => ({
-            id: type,
-            title: titleize(type),
-            color: typeColorMap[type] || "bg-slate-500",
-            tickets: sortedTickets.filter((t) => t.type === type),
-            droppable: true,
-            value: type,
-          }),
-        );
+        return Array.from(
+          new Set([
+            ...Object.keys(typeColorMap),
+            ...sortedTickets.map((t) => t.type),
+          ]),
+        ).map((type) => ({
+          id: type,
+          title: titleize(type),
+          color: typeColorMap[type] || "bg-slate-500",
+          tickets: sortedTickets.filter((t) => t.type === type),
+          droppable: true,
+          value: type,
+        }));
       case "assignee":
         const assignees = Array.from(
-          new Set(sortedTickets.map((t) => t.assignedTo?.name || "Unassigned")),
+          new Set([
+            "Unassigned",
+            ...availableUsers.map((user) => user.name),
+            ...sortedTickets.map((t) => t.assignedTo?.name || "Unassigned"),
+          ]),
         );
         return assignees.map((assignee) => ({
           id: assignee.toLowerCase(),

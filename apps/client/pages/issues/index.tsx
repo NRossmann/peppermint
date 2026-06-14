@@ -64,7 +64,7 @@ export default function Tickets() {
     kanbanColumns,
     uiSettings,
     handleUISettingChange,
-  } = useTicketView(filteredTickets, states);
+  } = useTicketView(filteredTickets, states, users);
 
   const {
     updateTicketStatus,
