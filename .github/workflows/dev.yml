@@ -1,9 +1,7 @@
 name: Dev Client Build
 
 on:
-  push:
-    branches:
-      - next
+  workflow_dispatch:
 
 jobs:
   build:
