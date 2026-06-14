@@ -12,7 +12,11 @@ export default function Login() {
       ).then((res) => res.json());
 
       if (!sso.success) {
-        router.push("/auth/login?error=account_not_found");
+        const params = new URLSearchParams({
+          error: sso.error || "oidc_callback_error",
+          message: sso.message || "SSO login failed.",
+        });
+        router.push(`/auth/login?${params.toString()}`);
       } else {
         setandRedirect(sso.token, sso.onboarding);
       }

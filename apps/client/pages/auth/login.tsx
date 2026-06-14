@@ -83,11 +83,19 @@ export default function Login({}) {
 
   useEffect(() => {
     if (router.query.error) {
+      const isMissingAccount = router.query.error === "account_not_found";
+      const description = isMissingAccount
+        ? "It looks like you have tried to use SSO with an account that does not exist. Please try again or contact your admin to get you set up first."
+        : typeof router.query.message === "string"
+          ? router.query.message
+          : "There was an error completing SSO login. Please try again or contact your admin.";
+
       toast({
         variant: "destructive",
-        title: "Account Error - No Account Found",
-        description:
-          "It looks like you have tried to use SSO with an account that does not exist. Please try again or contact your admin to get you set up first.",
+        title: isMissingAccount
+          ? "Account Error - No Account Found"
+          : "SSO Login Error",
+        description,
       });
     }
   }, [router]);

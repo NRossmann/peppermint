@@ -87,6 +87,40 @@ function getOidcGroupClaims(userInfo: Record<string, any>): string[] {
   ];
 }
 
+function isEmailLike(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+  );
+}
+
+function getOidcUserEmail(userInfo: Record<string, any>): string | null {
+  const emailCandidates = [
+    userInfo.email,
+    userInfo.preferred_username,
+    userInfo.upn,
+    userInfo.unique_name,
+  ];
+
+  return emailCandidates.find(isEmailLike) || null;
+}
+
+function getOidcUserName(userInfo: Record<string, any>): string {
+  const fullName = [userInfo.given_name, userInfo.family_name]
+    .filter((value) => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .trim();
+
+  return (
+    userInfo.name ||
+    fullName ||
+    userInfo.preferred_username ||
+    userInfo.nickname ||
+    "New User"
+  );
+}
+
 export function authRoutes(fastify: FastifyInstance) {
   // Register a new user
   fastify.post(
@@ -548,11 +582,28 @@ export function authRoutes(fastify: FastifyInstance) {
 
         // Retrieve user information
         const userInfo = await oidcClient.userinfo(tokens.access_token);
-
+        const userEmail = getOidcUserEmail(userInfo);
+        const userDisplayName = getOidcUserName(userInfo);
         const userGroups = getOidcGroupClaims(userInfo);
 
+        console.log("OIDC userinfo payload:", userInfo);
+        console.log("OIDC resolved claims:", {
+          email: userEmail,
+          name: userDisplayName,
+          groups: userGroups,
+        });
+
+        if (!userEmail) {
+          return reply.status(400).send({
+            success: false,
+            error: "missing_email",
+            message:
+              "Your OIDC provider did not return an email address. Add an email claim or email-like preferred username to the userinfo response.",
+          });
+        }
+
         let user = await prisma.user.findUnique({
-          where: { email: userInfo.email },
+          where: { email: userEmail },
         });
 
         await tracking("user_logged_in_oidc", {});
@@ -561,9 +612,9 @@ export function authRoutes(fastify: FastifyInstance) {
           // Create a new basic user
           user = await prisma.user.create({
             data: {
-              email: userInfo.email,
+              email: userEmail,
               password: await bcrypt.hash(generateRandomPassword(12), 10), // Set a random password of length 12
-              name: userInfo.name || "New User", // Use the name from userInfo or a default
+              name: userDisplayName, // Use the name from userInfo or a default
               isAdmin: false, // Set isAdmin to false for basic users
               language: "en", // Set a default language
               external_user: false, // Mark as external user
@@ -623,7 +674,8 @@ export function authRoutes(fastify: FastifyInstance) {
         console.error("Authentication error:", error);
         reply.status(403).send({
           success: false,
-          error: "OIDC callback error",
+          error: "oidc_callback_error",
+          message: error?.message || "OIDC callback error",
         });
       }
     },
