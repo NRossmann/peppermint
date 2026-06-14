@@ -9,6 +9,32 @@ import {
 } from "@/shadcn/types/tickets";
 import { useEffect, useState } from "react";
 
+const priorityColorMap: Record<string, string> = {
+  high: "bg-red-500",
+  medium: "bg-amber-500",
+  normal: "bg-green-500",
+  low: "bg-blue-500",
+};
+
+const typeColorMap: Record<string, string> = {
+  bug: "bg-red-500",
+  feature: "bg-blue-500",
+  support: "bg-green-500",
+  incident: "bg-rose-500",
+  service: "bg-cyan-500",
+  maintenance: "bg-amber-500",
+  access: "bg-violet-500",
+  feedback: "bg-orange-500",
+};
+
+function titleize(value: string) {
+  return value
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export function useTicketView(
   tickets: Ticket[] = [],
   availableStates: TicketState[] = [],
@@ -100,48 +126,38 @@ export function useTicketView(
           });
 
       case "priority":
-        return [
-          {
-            id: "high",
-            title: "High",
-            color: "bg-red-500",
-            tickets: sortedTickets.filter(
-              (t) => t.priority.toLowerCase() === "high",
-            ),
-          },
-          {
-            id: "normal",
-            title: "Normal",
-            color: "bg-green-500",
-            tickets: sortedTickets.filter(
-              (t) => t.priority.toLowerCase() === "normal",
-            ),
-          },
-          {
-            id: "low",
-            title: "Low",
-            color: "bg-blue-500",
-            tickets: sortedTickets.filter(
-              (t) => t.priority.toLowerCase() === "low",
-            ),
-          },
-        ];
+        const priorityOrder = ["high", "medium", "normal", "low"];
+        const priorities = Array.from(
+          new Set(sortedTickets.map((t) => t.priority.toLowerCase())),
+        ).sort((a, b) => {
+          const aIndex = priorityOrder.indexOf(a);
+          const bIndex = priorityOrder.indexOf(b);
+          const normalizedA = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+          const normalizedB = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+          return normalizedA - normalizedB || a.localeCompare(b);
+        });
+
+        return priorities.map((priority) => ({
+          id: priority,
+          title: titleize(priority),
+          color: priorityColorMap[priority] || "bg-slate-500",
+          tickets: sortedTickets.filter(
+            (t) => t.priority.toLowerCase() === priority,
+          ),
+          droppable: true,
+          value: priority,
+        }));
       case "type":
-        return [
-          {
-            id: "bug",
-            title: "Bug",
-            color: "bg-red-500",
-            tickets: sortedTickets.filter((t) => t.type === "bug"),
-          },
-          {
-            id: "feature",
-            title: "Feature",
-            color: "bg-blue-500",
-            tickets: sortedTickets.filter((t) => t.type === "feature"),
-          },
-          // Add other type columns as needed
-        ];
+        return Array.from(new Set(sortedTickets.map((t) => t.type))).map(
+          (type) => ({
+            id: type,
+            title: titleize(type),
+            color: typeColorMap[type] || "bg-slate-500",
+            tickets: sortedTickets.filter((t) => t.type === type),
+            droppable: true,
+            value: type,
+          }),
+        );
       case "assignee":
         const assignees = Array.from(
           new Set(sortedTickets.map((t) => t.assignedTo?.name || "Unassigned")),
@@ -153,6 +169,8 @@ export function useTicketView(
           tickets: sortedTickets.filter(
             (t) => (t.assignedTo?.name || "Unassigned") === assignee,
           ),
+          droppable: true,
+          value: assignee === "Unassigned" ? "" : assignee,
         }));
       default:
         return [];

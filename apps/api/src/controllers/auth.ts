@@ -9,6 +9,7 @@ import { AuthorizationCode } from "simple-oauth2";
 import { getOAuthProvider, getOidcConfig } from "../lib/auth";
 import { track } from "../lib/hog";
 import { forgotPassword } from "../lib/nodemailer/auth/forgot-password";
+import { isEffectiveAdmin } from "../lib/roles";
 import { requirePermission } from "../lib/roles";
 import { checkSession } from "../lib/session";
 import { getOAuthClient } from "../lib/utils/oauth_client";
@@ -121,6 +122,13 @@ function getOidcUserName(userInfo: Record<string, any>): string {
   );
 }
 
+async function getUserWithRoles(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    include: { roles: true },
+  });
+}
+
 export function authRoutes(fastify: FastifyInstance) {
   // Register a new user
   fastify.post(
@@ -148,8 +156,11 @@ export function authRoutes(fastify: FastifyInstance) {
       };
 
       const requester = await checkSession(request);
+      const requesterWithRoles = requester
+        ? await getUserWithRoles(requester.id)
+        : null;
 
-      if (!requester?.isAdmin) {
+      if (!isEffectiveAdmin(requesterWithRoles)) {
         return reply.code(401).send({
           message: "Unauthorized",
         });
@@ -420,7 +431,7 @@ export function authRoutes(fastify: FastifyInstance) {
         id: user!.id,
         email: user!.email,
         name: user!.name,
-        isAdmin: user!.isAdmin,
+        isAdmin: isEffectiveAdmin({ ...user, roles: [] }),
         language: user!.language,
         ticket_created: user!.notify_ticket_created,
         ticket_status_changed: user!.notify_ticket_status_changed,
@@ -604,6 +615,7 @@ export function authRoutes(fastify: FastifyInstance) {
 
         let user = await prisma.user.findUnique({
           where: { email: userEmail },
+          include: { roles: true },
         });
 
         await tracking("user_logged_in_oidc", {});
@@ -620,6 +632,7 @@ export function authRoutes(fastify: FastifyInstance) {
               external_user: false, // Mark as external user
               firstLogin: true, // Set firstLogin to true
             },
+            include: { roles: true },
           });
         }
 
@@ -634,13 +647,14 @@ export function authRoutes(fastify: FastifyInstance) {
           },
         });
 
-        await prisma.user.update({
+        user = await prisma.user.update({
           where: { id: user.id },
           data: {
             roles: {
               set: mappedRoles.map((role) => ({ id: role.id })),
             },
           },
+          include: { roles: true },
         });
 
         const secret = Buffer.from(process.env.SECRET!, "base64");
@@ -675,6 +689,7 @@ export function authRoutes(fastify: FastifyInstance) {
         reply.send({
           token: signed_token,
           onboarding: user.firstLogin,
+          isAdmin: isEffectiveAdmin(user),
           success: true,
         });
       } catch (error: any) {
@@ -739,6 +754,7 @@ export function authRoutes(fastify: FastifyInstance) {
         // Issue JWT token
         let user = await prisma.user.findUnique({
           where: { email: emails },
+          include: { roles: true },
         });
 
         if (!user) {
@@ -782,6 +798,7 @@ export function authRoutes(fastify: FastifyInstance) {
         reply.send({
           token: signed_token,
           onboarding: user.firstLogin,
+          isAdmin: isEffectiveAdmin(user),
           success: true,
         });
       } catch (error: any) {
@@ -856,6 +873,7 @@ export function authRoutes(fastify: FastifyInstance) {
 
       let user = await prisma.user.findUnique({
         where: { id: session!.userId },
+        include: { roles: true },
       });
 
       if (!user) {
@@ -877,7 +895,7 @@ export function authRoutes(fastify: FastifyInstance) {
         id: user!.id,
         email: user!.email,
         name: user!.name,
-        isAdmin: user!.isAdmin,
+        isAdmin: isEffectiveAdmin(user),
         language: user!.language,
         ticket_created: user!.notify_ticket_created,
         ticket_status_changed: user!.notify_ticket_status_changed,
@@ -934,18 +952,10 @@ export function authRoutes(fastify: FastifyInstance) {
         user: string;
       };
 
-      const bearer = request.headers.authorization!.split(" ")[1];
-      let session = await prisma.session.findUnique({
-        where: {
-          sessionToken: bearer,
-        },
-      });
+      const session = await checkSession(request);
+      const check = session ? await getUserWithRoles(session.id) : null;
 
-      const check = await prisma.user.findUnique({
-        where: { id: session?.userId },
-      });
-
-      if (check?.isAdmin === false) {
+      if (!isEffectiveAdmin(check)) {
         return reply.code(401).send({
           message: "Unauthorized",
         });
@@ -1050,8 +1060,11 @@ export function authRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const session = await checkSession(request);
+      const sessionWithRoles = session
+        ? await getUserWithRoles(session.id)
+        : null;
 
-      if (session?.isAdmin) {
+      if (isEffectiveAdmin(sessionWithRoles)) {
         const { id, role } = request.body as { id: string; role: boolean };
         if (role === false) {
           const admins = await prisma.user.findMany({

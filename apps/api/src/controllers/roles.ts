@@ -18,6 +18,7 @@ export function roleRoutes(fastify: FastifyInstance) {
         description,
         permissions,
         isDefault,
+        isAdminRole,
         authentikGroupName,
       }: any = request.body;
 
@@ -39,6 +40,7 @@ export function roleRoutes(fastify: FastifyInstance) {
           authentikGroupName: authentikGroupName || null,
           permissions,
           isDefault: isDefault || false,
+          isAdminRole: isAdminRole || false,
         },
       });
 
@@ -116,6 +118,7 @@ export function roleRoutes(fastify: FastifyInstance) {
         description,
         permissions,
         isDefault,
+        isAdminRole,
         users,
         authentikGroupName,
       }: any = request.body;
@@ -129,6 +132,7 @@ export function roleRoutes(fastify: FastifyInstance) {
             authentikGroupName: authentikGroupName || null,
             permissions,
             isDefault,
+            isAdminRole: isAdminRole || false,
             updatedAt: new Date(),
             users: {
               set: Array.isArray(users)

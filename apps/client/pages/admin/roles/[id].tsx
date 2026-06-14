@@ -13,6 +13,7 @@ export default function UpdateRole() {
   );
   const [roleName, setRoleName] = useState("");
   const [authentikGroupName, setAuthentikGroupName] = useState("");
+  const [isAdminRole, setIsAdminRole] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [users, setUsers] = useState<Array<{ id: string; email: string }>>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,6 +35,7 @@ export default function UpdateRole() {
       if (data.success) {
         setRoleName(data.role.name);
         setAuthentikGroupName(data.role.authentikGroupName || "");
+        setIsAdminRole(Boolean(data.role.isAdminRole));
         setSelectedPermissions(data.role.permissions);
         setSelectedUsers(data.role.users.map((u: any) => u.id));
       }
@@ -74,6 +76,7 @@ export default function UpdateRole() {
       body: JSON.stringify({
         name: roleName,
         authentikGroupName,
+        isAdminRole,
         permissions: selectedPermissions,
         users: selectedUsers,
       }),
@@ -148,6 +151,14 @@ export default function UpdateRole() {
                   onChange={(e) => setAuthentikGroupName(e.target.value)}
                 />
               </div>
+              <label className="flex items-center gap-2 ml-4 text-sm whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  checked={isAdminRole}
+                  onChange={(e) => setIsAdminRole(e.target.checked)}
+                />
+                <span>Admin role</span>
+              </label>
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded"
                 onClick={() => setStep(2)}
@@ -160,6 +171,10 @@ export default function UpdateRole() {
               If you set an Authentik group name here, OIDC logins will
               synchronize this role from the userinfo group claims and overwrite
               manual role assignments for that user.
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Admin roles grant full admin access to members, including users
+              assigned through Authentik group sync.
             </p>
           </CardHeader>
           <CardContent>

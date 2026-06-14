@@ -70,6 +70,7 @@ model Role {
   authentikGroupName String?
   permissions Json[]
   isDefault   Boolean  @default(false)
+  isAdminRole Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
   users       User[]

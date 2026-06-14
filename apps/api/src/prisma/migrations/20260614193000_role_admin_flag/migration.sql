@@ -1,0 +1,2 @@
+ALTER TABLE "Role"
+ADD COLUMN "isAdminRole" BOOLEAN NOT NULL DEFAULT false;

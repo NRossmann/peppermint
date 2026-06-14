@@ -69,10 +69,29 @@ export default function Tickets() {
   const {
     updateTicketStatus,
     updateTicketKanbanStatus,
+    updateTicketKanbanGrouping,
     updateTicketAssignee,
     updateTicketPriority,
     deleteTicket,
   } = useTicketActions(token, refetch);
+
+  const handleKanbanDrop = (ticket, column) => {
+    if (kanbanGrouping === "status") {
+      if (!column.state) return;
+      return updateTicketKanbanStatus(ticket, column.state);
+    }
+
+    if (!column.value && kanbanGrouping !== "assignee") {
+      return;
+    }
+
+    return updateTicketKanbanGrouping(
+      kanbanGrouping,
+      ticket,
+      column.value || "",
+      users,
+    );
+  };
 
   // Update local storage when filters change
   useEffect(() => {
@@ -167,12 +186,6 @@ export default function Tickets() {
         />
       </div>
 
-      {viewMode === "kanban" && kanbanGrouping !== "status" && (
-        <div className="px-4 py-2 text-xs text-muted-foreground border-b bg-background">
-          Drag and drop is available when grouping by status.
-        </div>
-      )}
-
       {viewMode === "list" ? (
         <TicketList
           tickets={sortedTickets}
@@ -188,7 +201,8 @@ export default function Tickets() {
         <TicketKanban
           columns={kanbanColumns}
           uiSettings={uiSettings}
-          onStatusChange={updateTicketKanbanStatus}
+          grouping={kanbanGrouping}
+          onColumnDrop={handleKanbanDrop}
         />
       )}
     </div>

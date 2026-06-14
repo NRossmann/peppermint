@@ -130,6 +130,11 @@ export default function Roles() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <strong>{role.name}</strong>
+                          {role.isAdminRole && (
+                            <span className="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                              Admin role
+                            </span>
+                          )}
                         </div>
                         <span className="text-xs text-gray-500">
                           ID: {role.id}
@@ -153,7 +158,7 @@ export default function Roles() {
                           onClick={() => {
                             if (
                               window.confirm(
-                                "Are you sure you want to delete this role?"
+                                "Are you sure you want to delete this role?",
                               )
                             ) {
                               handleDeleteRole(role.id);

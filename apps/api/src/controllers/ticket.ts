@@ -535,7 +535,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       preHandler: requirePermission(["issue::update"]),
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { id, note, detail, title, priority, stateId, client }: any =
+      const { id, note, detail, title, priority, type, stateId, client }: any =
         request.body;
 
       const user = await checkSession(request);
@@ -572,6 +572,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           note,
           title,
           priority,
+          ...(type ? { type } : {}),
           ...(nextState ? { stateId: nextState.id } : {}),
         },
         include: {

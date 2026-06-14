@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { track } from "../lib/hog";
+import { isEffectiveAdmin } from "../lib/roles";
 import { requirePermission } from "../lib/roles";
 import { checkSession } from "../lib/session";
 import { prisma } from "../prisma";
@@ -18,22 +19,24 @@ export function userRoutes(fastify: FastifyInstance) {
         where: {
           external_user: false,
         },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          isAdmin: true,
-          createdAt: true,
-          updatedAt: true,
-          language: true,
+        include: {
+          roles: true,
         },
       });
 
       reply.send({
-        users,
+        users: users.map((user) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          isAdmin: isEffectiveAdmin(user),
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          language: user.language,
+        })),
         success: true,
       });
-    }
+    },
   );
 
   // New user
@@ -42,8 +45,14 @@ export function userRoutes(fastify: FastifyInstance) {
 
     async (request: FastifyRequest, reply: FastifyReply) => {
       const session = await checkSession(request);
+      const sessionWithRoles = session
+        ? await prisma.user.findUnique({
+            where: { id: session.id },
+            include: { roles: true },
+          })
+        : null;
 
-      if (session!.isAdmin) {
+      if (isEffectiveAdmin(sessionWithRoles)) {
         const { email, password, name, admin }: any = request.body;
 
         const e = email.toLowerCase();
@@ -74,7 +83,7 @@ export function userRoutes(fastify: FastifyInstance) {
       } else {
         reply.status(403).send({ message: "Unauthorized", failed: true });
       }
-    }
+    },
   );
 
   // (ADMIN) Reset password
@@ -84,8 +93,14 @@ export function userRoutes(fastify: FastifyInstance) {
       const { password, id }: any = request.body;
 
       const session = await checkSession(request);
+      const sessionWithRoles = session
+        ? await prisma.user.findUnique({
+            where: { id: session.id },
+            include: { roles: true },
+          })
+        : null;
 
-      if (session!.isAdmin) {
+      if (isEffectiveAdmin(sessionWithRoles)) {
         const hashedPass = await bcrypt.hash(password, 10);
         await prisma.user.update({
           where: { id: id },
@@ -99,7 +114,7 @@ export function userRoutes(fastify: FastifyInstance) {
       } else {
         reply.status(403).send({ message: "Unauthorized", failed: true });
       }
-    }
+    },
   );
 
   // Mark Notification as read
@@ -108,7 +123,7 @@ export function userRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { id }: any = request.params;
       const session = await checkSession(request);
-      
+
       if (!session) {
         return reply.code(401).send({
           message: "Unauthorized",
@@ -118,16 +133,16 @@ export function userRoutes(fastify: FastifyInstance) {
 
       // Get the notification and verify it belongs to the user
       const notification = await prisma.notifications.findUnique({
-        where: { id: id }
+        where: { id: id },
       });
-      
+
       if (!notification) {
         return reply.code(404).send({
           message: "Notification not found",
           success: false,
         });
       }
-      
+
       if (notification.userId !== session.id) {
         return reply.code(403).send({
           message: "Access denied. You can only manage your own notifications.",
@@ -145,6 +160,6 @@ export function userRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 }

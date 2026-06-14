@@ -1,4 +1,4 @@
-import { Ticket, TicketState } from "@/shadcn/types/tickets";
+import { KanbanGrouping, Ticket, TicketState } from "@/shadcn/types/tickets";
 import { toast } from "../hooks/use-toast";
 
 export function useTicketActions(token: string, refetch: () => void) {
@@ -143,6 +143,65 @@ export function useTicketActions(token: string, refetch: () => void) {
     }
   };
 
+  const updateTicketType = async (ticket: Ticket, type: string) => {
+    try {
+      const response = await fetch(`/api/v1/ticket/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: ticket.id,
+          detail: ticket.detail,
+          note: ticket.note,
+          title: ticket.title,
+          priority: ticket.priority,
+          stateId: ticket.stateId,
+          type,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update type");
+
+      toast({
+        title: "Type updated",
+        description: `Ticket type set to ${type}`,
+        duration: 3000,
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update type",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
+  const updateTicketKanbanGrouping = async (
+    grouping: KanbanGrouping,
+    ticket: Ticket,
+    value: string,
+    users: Array<{ id: string; name: string }> = [],
+  ) => {
+    switch (grouping) {
+      case "status":
+        return;
+      case "priority":
+        return updateTicketPriority(ticket, value);
+      case "type":
+        return updateTicketType(ticket, value);
+      case "assignee": {
+        const matchedUser = users.find((user) => user.name === value);
+        return updateTicketAssignee(ticket.id, matchedUser?.id);
+      }
+      default:
+        return;
+    }
+  };
+
   const deleteTicket = async (ticketId: string) => {
     try {
       const response = await fetch(`/api/v1/ticket/delete`, {
@@ -175,8 +234,10 @@ export function useTicketActions(token: string, refetch: () => void) {
   return {
     updateTicketStatus,
     updateTicketKanbanStatus,
+    updateTicketKanbanGrouping,
     updateTicketAssignee,
     updateTicketPriority,
+    updateTicketType,
     deleteTicket,
   };
 }

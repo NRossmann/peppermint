@@ -8,24 +8,26 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   KanbanColumn,
+  KanbanGrouping,
   Ticket,
-  TicketState,
   UISettings,
 } from "../../types/tickets";
 
 interface TicketKanbanProps {
   columns: KanbanColumn[];
   uiSettings: UISettings;
-  onStatusChange: (ticket: Ticket, state: TicketState) => void;
+  grouping: KanbanGrouping;
+  onColumnDrop: (ticket: Ticket, column: KanbanColumn) => void;
 }
 
 interface KanbanColumnLaneProps {
   column: KanbanColumn;
   uiSettings: UISettings;
   draggingTicketId: string | null;
+  grouping: KanbanGrouping;
   onDragStart: (ticketId: string) => void;
   onDragEnd: () => void;
-  onStatusChange: (ticket: Ticket, state: TicketState) => void;
+  onColumnDrop: (ticket: Ticket, column: KanbanColumn) => void;
   ticketLookup: Map<string, Ticket>;
 }
 
@@ -109,9 +111,11 @@ function TicketKanbanCard({
               ${
                 ticket.priority.toLowerCase() === "high"
                   ? "bg-red-100 text-red-800"
-                  : ticket.priority.toLowerCase() === "normal"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-blue-100 text-blue-800"
+                  : ticket.priority.toLowerCase() === "medium"
+                    ? "bg-amber-100 text-amber-800"
+                    : ticket.priority.toLowerCase() === "normal"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-blue-100 text-blue-800"
               }`}
             >
               {ticket.priority}
@@ -127,9 +131,10 @@ function TicketKanbanLane({
   column,
   uiSettings,
   draggingTicketId,
+  grouping,
   onDragStart,
   onDragEnd,
-  onStatusChange,
+  onColumnDrop,
   ticketLookup,
 }: KanbanColumnLaneProps) {
   const elementRef = useRef<HTMLDivElement | null>(null);
@@ -148,9 +153,24 @@ function TicketKanbanLane({
               ? ticketLookup.get(ticketId)
               : undefined;
 
-          return (
-            !!ticket && !!column.state && ticket.stateId !== column.state.id
-          );
+          if (!ticket) return false;
+
+          switch (grouping) {
+            case "status":
+              return !!column.state && ticket.stateId !== column.state.id;
+            case "priority":
+              return (
+                !!column.value && ticket.priority.toLowerCase() !== column.value
+              );
+            case "type":
+              return !!column.value && ticket.type !== column.value;
+            case "assignee": {
+              const assigneeName = ticket.assignedTo?.name || "Unassigned";
+              return column.title !== assigneeName;
+            }
+            default:
+              return false;
+          }
         },
         getData: () => ({ columnId: column.id }),
         onDrop: ({ source }) => {
@@ -158,16 +178,26 @@ function TicketKanbanLane({
           if (typeof ticketId !== "string") return;
 
           const ticket = ticketLookup.get(ticketId);
-          if (!ticket || !column.state || ticket.stateId === column.state.id) {
+          if (!ticket) {
             return;
           }
 
-          onStatusChange(ticket, column.state);
+          onColumnDrop(ticket, column);
           onDragEnd();
         },
       }),
     );
-  }, [column.droppable, column.id, onDragEnd, onStatusChange, ticketLookup]);
+  }, [
+    column.droppable,
+    column.id,
+    column.state,
+    column.title,
+    column.value,
+    grouping,
+    onColumnDrop,
+    onDragEnd,
+    ticketLookup,
+  ]);
 
   return (
     <div
@@ -202,7 +232,8 @@ function TicketKanbanLane({
 export default function TicketKanban({
   columns,
   uiSettings,
-  onStatusChange,
+  grouping,
+  onColumnDrop,
 }: TicketKanbanProps) {
   const [draggingTicketId, setDraggingTicketId] = useState<string | null>(null);
 
@@ -225,9 +256,10 @@ export default function TicketKanban({
             column={column}
             uiSettings={uiSettings}
             draggingTicketId={draggingTicketId}
+            grouping={grouping}
             onDragStart={setDraggingTicketId}
             onDragEnd={() => setDraggingTicketId(null)}
-            onStatusChange={onStatusChange}
+            onColumnDrop={onColumnDrop}
             ticketLookup={ticketLookup}
           />
         ))}

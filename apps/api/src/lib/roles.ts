@@ -6,6 +6,14 @@ type UserWithRoles = User & {
   roles: Role[];
 };
 
+export function hasAdminRole(user?: UserWithRoles | null): boolean {
+  return Boolean(user?.roles?.some((role) => role.isAdminRole));
+}
+
+export function isEffectiveAdmin(user?: UserWithRoles | null): boolean {
+  return Boolean(user?.isAdmin || hasAdminRole(user));
+}
+
 export class InsufficientPermissionsError extends Error {
   constructor(message: string = "Insufficient permissions") {
     super(message);
@@ -23,10 +31,10 @@ export class InsufficientPermissionsError extends Error {
 export function hasPermission(
   user: UserWithRoles,
   requiredPermissions: Permission | Permission[],
-  requireAll: boolean = true
+  requireAll: boolean = true,
 ): boolean {
   // Admins have all permissions
-  if (user?.isAdmin) {
+  if (isEffectiveAdmin(user)) {
     return true;
   }
 
@@ -42,7 +50,7 @@ export function hasPermission(
   const defaultRole = user.roles.find((role) => role.isDefault);
   if (defaultRole) {
     defaultRole.permissions.forEach((perm) =>
-      userPermissions.add(perm as Permission)
+      userPermissions.add(perm as Permission),
     );
   }
 
@@ -67,7 +75,7 @@ export function hasPermission(
  */
 export function requirePermission(
   requiredPermissions: Permission | Permission[],
-  requireAll: boolean = true
+  requireAll: boolean = true,
 ) {
   return async (req: any, res: any, next: any) => {
     try {

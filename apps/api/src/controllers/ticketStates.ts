@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { requirePermission } from "../lib/roles";
+import { isEffectiveAdmin, requirePermission } from "../lib/roles";
 import {
   serializeTicketState,
   slugifyTicketState,
@@ -64,8 +64,14 @@ export function ticketStateRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const session = await checkSession(request);
+      const sessionWithRoles = session
+        ? await prisma.user.findUnique({
+            where: { id: session.id },
+            include: { roles: true },
+          })
+        : null;
 
-      if (!session?.isAdmin) {
+      if (!isEffectiveAdmin(sessionWithRoles)) {
         return reply
           .status(403)
           .send({ success: false, message: "Unauthorized" });
@@ -103,8 +109,14 @@ export function ticketStateRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const session = await checkSession(request);
+      const sessionWithRoles = session
+        ? await prisma.user.findUnique({
+            where: { id: session.id },
+            include: { roles: true },
+          })
+        : null;
 
-      if (!session?.isAdmin) {
+      if (!isEffectiveAdmin(sessionWithRoles)) {
         return reply
           .status(403)
           .send({ success: false, message: "Unauthorized" });
@@ -166,8 +178,14 @@ export function ticketStateRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const session = await checkSession(request);
+      const sessionWithRoles = session
+        ? await prisma.user.findUnique({
+            where: { id: session.id },
+            include: { roles: true },
+          })
+        : null;
 
-      if (!session?.isAdmin) {
+      if (!isEffectiveAdmin(sessionWithRoles)) {
         return reply
           .status(403)
           .send({ success: false, message: "Unauthorized" });

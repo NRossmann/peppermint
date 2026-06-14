@@ -44,6 +44,7 @@ export type KanbanColumn = {
   droppable?: boolean;
   order?: number;
   state?: TicketState;
+  value?: string;
 };
 
 export interface UISettings {
