@@ -58,7 +58,7 @@ export default function TicketFilters({
   );
 
   return (
-    <div className="flex flex-row items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-start gap-2">
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="h-6 bg-transparent">
@@ -177,7 +177,7 @@ export default function TicketFilters({
         </PopoverContent>
       </Popover>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-wrap gap-2">
         {selectedPriorities.map((priority) => (
           <FilterBadge
             key={`priority-${priority}`}

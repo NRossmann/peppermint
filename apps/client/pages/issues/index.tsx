@@ -160,30 +160,36 @@ export default function Tickets() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="py-2 px-3 bg-background border-b-[1px] flex flex-row items-center justify-between">
-        <TicketFilters
-          selectedPriorities={selectedPriorities}
-          selectedStatuses={selectedStatuses}
-          statusOptions={statusOptions}
-          selectedAssignees={selectedAssignees}
-          users={users}
-          onPriorityToggle={handlePriorityToggle}
-          onStatusToggle={handleStatusToggle}
-          onAssigneeToggle={handleAssigneeToggle}
-          onClearFilters={clearFilters}
-        />
+    <div className="flex flex-col h-screen min-w-0 overflow-hidden">
+      <div className="py-2 px-3 bg-background border-b-[1px] shrink-0">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <TicketFilters
+              selectedPriorities={selectedPriorities}
+              selectedStatuses={selectedStatuses}
+              statusOptions={statusOptions}
+              selectedAssignees={selectedAssignees}
+              users={users}
+              onPriorityToggle={handlePriorityToggle}
+              onStatusToggle={handleStatusToggle}
+              onAssigneeToggle={handleAssigneeToggle}
+              onClearFilters={clearFilters}
+            />
+          </div>
 
-        <ViewSettings
-          viewMode={viewMode}
-          kanbanGrouping={kanbanGrouping}
-          sortBy={sortBy}
-          uiSettings={uiSettings}
-          onViewModeChange={setViewMode}
-          onKanbanGroupingChange={setKanbanGrouping}
-          onSortChange={setSortBy}
-          onUISettingChange={handleUISettingChange}
-        />
+          <div className="sticky top-0 z-10 shrink-0 self-start">
+            <ViewSettings
+              viewMode={viewMode}
+              kanbanGrouping={kanbanGrouping}
+              sortBy={sortBy}
+              uiSettings={uiSettings}
+              onViewModeChange={setViewMode}
+              onKanbanGroupingChange={setKanbanGrouping}
+              onSortChange={setSortBy}
+              onUISettingChange={handleUISettingChange}
+            />
+          </div>
+        </div>
       </div>
 
       {viewMode === "list" ? (
@@ -198,12 +204,14 @@ export default function Tickets() {
           uiSettings={uiSettings}
         />
       ) : (
-        <TicketKanban
-          columns={kanbanColumns}
-          uiSettings={uiSettings}
-          grouping={kanbanGrouping}
-          onColumnDrop={handleKanbanDrop}
-        />
+        <div className="flex-1 min-h-0 min-w-0 overflow-hidden">
+          <TicketKanban
+            columns={kanbanColumns}
+            uiSettings={uiSettings}
+            grouping={kanbanGrouping}
+            onColumnDrop={handleKanbanDrop}
+          />
+        </div>
       )}
     </div>
   );

@@ -248,8 +248,8 @@ export default function TicketKanban({
   );
 
   return (
-    <div className="flex-1 min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <div className="flex gap-4 p-4 min-w-fit max-w-[calc(100vw-2rem)]">
+    <div className="h-full w-full min-w-0 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="inline-flex min-h-full min-w-full items-start gap-4 p-4 align-top">
         {columns.map((column) => (
           <TicketKanbanLane
             key={column.id}
