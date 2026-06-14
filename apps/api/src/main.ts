@@ -60,6 +60,7 @@ server.get(
 // JWT authentication hook
 server.addHook("preHandler", async function (request: any, reply: any) {
   try {
+    const requestPath = request.url.split("?")[0];
     const publicRoutes = [
       { url: "/api/v1/auth/login", method: "POST" },
       { url: "/api/v1/auth/check", method: "GET" },
@@ -69,7 +70,7 @@ server.addHook("preHandler", async function (request: any, reply: any) {
     ];
 
     const isPublicRoute = publicRoutes.some(
-      (route) => route.url === request.url && route.method === request.method,
+      (route) => route.url === requestPath && route.method === request.method,
     );
 
     if (isPublicRoute) {
@@ -79,6 +80,11 @@ server.addHook("preHandler", async function (request: any, reply: any) {
     const bearer = request.headers.authorization!.split(" ")[1];
     checkToken(bearer);
   } catch (err) {
+    console.error("Auth preHandler rejected request", {
+      method: request.method,
+      url: request.url,
+      error: err instanceof Error ? err.message : err,
+    });
     reply.status(401).send({
       message: "Unauthorized",
       success: false,
