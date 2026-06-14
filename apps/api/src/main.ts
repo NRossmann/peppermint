@@ -54,21 +54,28 @@ server.get(
   },
   async function (request, response) {
     response.send({ healthy: true });
-  }
+  },
 );
 
 // JWT authentication hook
 server.addHook("preHandler", async function (request: any, reply: any) {
   try {
-    if (request.url === "/api/v1/auth/login" && request.method === "POST") {
+    const publicRoutes = [
+      { url: "/api/v1/auth/login", method: "POST" },
+      { url: "/api/v1/auth/check", method: "GET" },
+      { url: "/api/v1/auth/oidc/callback", method: "GET" },
+      { url: "/api/v1/auth/oauth/callback", method: "GET" },
+      { url: "/api/v1/ticket/public/create", method: "POST" },
+    ];
+
+    const isPublicRoute = publicRoutes.some(
+      (route) => route.url === request.url && route.method === request.method,
+    );
+
+    if (isPublicRoute) {
       return true;
     }
-    if (
-      request.url === "/api/v1/ticket/public/create" &&
-      request.method === "POST"
-    ) {
-      return true;
-    }
+
     const bearer = request.headers.authorization!.split(" ")[1];
     checkToken(bearer);
   } catch (err) {
@@ -135,7 +142,7 @@ const start = async () => {
 
         client.shutdownAsync();
         console.info(`Server listening on ${address}`);
-      }
+      },
     );
 
     setInterval(() => getEmails(), 10000); // Call getEmails every minute

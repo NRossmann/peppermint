@@ -3,6 +3,9 @@ FROM node:20 AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
+ARG NEXT_PUBLIC_CLIENT_VERSION
+ENV NEXT_PUBLIC_CLIENT_VERSION=$NEXT_PUBLIC_CLIENT_VERSION
+
 RUN apt-get update && \
     apt-get install -y build-essential python3 make g++ pkg-config libssl-dev
 
