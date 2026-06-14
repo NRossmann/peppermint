@@ -643,16 +643,21 @@ export function authRoutes(fastify: FastifyInstance) {
           },
         });
 
-        var b64string = process.env.SECRET;
-        var secret = new Buffer(b64string!, "base64"); // Ta-da
+        const secret = Buffer.from(process.env.SECRET!, "base64");
 
         // Issue JWT token
         let signed_token = jwt.sign(
           {
-            data: { id: user.id },
+            data: {
+              id: user.id,
+              sessionId: crypto.randomBytes(32).toString("hex"),
+            },
           },
           secret,
-          { expiresIn: "8h" },
+          {
+            expiresIn: "8h",
+            algorithm: "HS256",
+          },
         );
 
         // Create a session
@@ -661,6 +666,8 @@ export function authRoutes(fastify: FastifyInstance) {
             userId: user.id,
             sessionToken: signed_token,
             expires: new Date(Date.now() + 8 * 60 * 60 * 1000),
+            userAgent: request.headers["user-agent"] || "",
+            ipAddress: request.ip,
           },
         });
 
@@ -741,16 +748,21 @@ export function authRoutes(fastify: FastifyInstance) {
           });
         }
 
-        var b64string = process.env.SECRET;
-        var secret = new Buffer(b64string!, "base64"); // Ta-da
+        const secret = Buffer.from(process.env.SECRET!, "base64");
 
         // Issue JWT token
         let signed_token = jwt.sign(
           {
-            data: { id: user.id },
+            data: {
+              id: user.id,
+              sessionId: crypto.randomBytes(32).toString("hex"),
+            },
           },
           secret,
-          { expiresIn: "8h" },
+          {
+            expiresIn: "8h",
+            algorithm: "HS256",
+          },
         );
 
         // Create a session
@@ -759,6 +771,8 @@ export function authRoutes(fastify: FastifyInstance) {
             userId: user.id,
             sessionToken: signed_token,
             expires: new Date(Date.now() + 8 * 60 * 60 * 1000),
+            userAgent: request.headers["user-agent"] || "",
+            ipAddress: request.ip,
           },
         });
 
