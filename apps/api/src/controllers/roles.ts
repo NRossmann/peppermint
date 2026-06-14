@@ -13,7 +13,13 @@ export function roleRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const user = await checkSession(request);
-      const { name, description, permissions, isDefault }: any = request.body;
+      const {
+        name,
+        description,
+        permissions,
+        isDefault,
+        authentikGroupName,
+      }: any = request.body;
 
       const existingRole = await prisma.role.findUnique({
         where: { name },
@@ -30,6 +36,7 @@ export function roleRoutes(fastify: FastifyInstance) {
         data: {
           name,
           description,
+          authentikGroupName: authentikGroupName || null,
           permissions,
           isDefault: isDefault || false,
         },
@@ -43,7 +50,7 @@ export function roleRoutes(fastify: FastifyInstance) {
       client.shutdownAsync();
 
       reply.status(200).send({ message: "Role created!", success: true });
-    }
+    },
   );
 
   // Get all roles
@@ -66,7 +73,7 @@ export function roleRoutes(fastify: FastifyInstance) {
       });
 
       reply.status(200).send({ roles, success: true, roles_active: active });
-    }
+    },
   );
 
   // Get role by ID
@@ -93,7 +100,7 @@ export function roleRoutes(fastify: FastifyInstance) {
       }
 
       reply.status(200).send({ role, success: true });
-    }
+    },
   );
 
   // Update role
@@ -104,8 +111,14 @@ export function roleRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { id }: any = request.params;
-      const { name, description, permissions, isDefault, users }: any =
-        request.body;
+      const {
+        name,
+        description,
+        permissions,
+        isDefault,
+        users,
+        authentikGroupName,
+      }: any = request.body;
 
       try {
         const updatedRole = await prisma.role.update({
@@ -113,6 +126,7 @@ export function roleRoutes(fastify: FastifyInstance) {
           data: {
             name,
             description,
+            authentikGroupName: authentikGroupName || null,
             permissions,
             isDefault,
             updatedAt: new Date(),
@@ -134,7 +148,7 @@ export function roleRoutes(fastify: FastifyInstance) {
         }
         throw error;
       }
-    }
+    },
   );
 
   // Delete role
@@ -161,7 +175,7 @@ export function roleRoutes(fastify: FastifyInstance) {
         }
         throw error;
       }
-    }
+    },
   );
 
   // Assign role to user
@@ -196,7 +210,7 @@ export function roleRoutes(fastify: FastifyInstance) {
         }
         throw error;
       }
-    }
+    },
   );
 
   // Remove role from user
@@ -231,6 +245,6 @@ export function roleRoutes(fastify: FastifyInstance) {
         }
         throw error;
       }
-    }
+    },
   );
 }

@@ -8,8 +8,11 @@ import { useEffect, useState } from "react";
 
 export default function UpdateRole() {
   const [step, setStep] = useState(1);
-  const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>(
+    [],
+  );
   const [roleName, setRoleName] = useState("");
+  const [authentikGroupName, setAuthentikGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [users, setUsers] = useState<Array<{ id: string; email: string }>>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,6 +33,7 @@ export default function UpdateRole() {
       const data = await response.json();
       if (data.success) {
         setRoleName(data.role.name);
+        setAuthentikGroupName(data.role.authentikGroupName || "");
         setSelectedPermissions(data.role.permissions);
         setSelectedUsers(data.role.users.map((u: any) => u.id));
       }
@@ -42,7 +46,7 @@ export default function UpdateRole() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/v1/users/all', {
+      const response = await fetch("/api/v1/users/all", {
         headers: {
           Authorization: `Bearer ${getCookie("session")}`,
         },
@@ -69,6 +73,7 @@ export default function UpdateRole() {
       },
       body: JSON.stringify({
         name: roleName,
+        authentikGroupName,
         permissions: selectedPermissions,
         users: selectedUsers,
       }),
@@ -98,7 +103,7 @@ export default function UpdateRole() {
       const newPermissions = [
         ...selectedPermissions,
         ...categoryPermissions.filter(
-          (p: Permission) => !selectedPermissions.includes(p)
+          (p: Permission) => !selectedPermissions.includes(p),
         ),
       ];
       setSelectedPermissions(newPermissions);
@@ -106,8 +111,8 @@ export default function UpdateRole() {
       setSelectedPermissions(
         selectedPermissions.filter(
           //@ts-ignore
-          (p: Permission) => !categoryPermissions.includes(p)
-        )
+          (p: Permission) => !categoryPermissions.includes(p),
+        ),
       );
     }
   };
@@ -120,22 +125,29 @@ export default function UpdateRole() {
   };
 
   const filteredUsers = users.filter((user) =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <div className="p-4">
-
       {step === 1 ? (
         <Card>
           <CardHeader>
             <div className="flex flex-row justify-between items-center">
-              <Input
-                placeholder="Role Name"
-                value={roleName}
-                className="w-1/4"
-                onChange={(e) => setRoleName(e.target.value)}
-              />
+              <div className="flex gap-3 w-full max-w-2xl">
+                <Input
+                  placeholder="Role Name"
+                  value={roleName}
+                  className="w-1/2"
+                  onChange={(e) => setRoleName(e.target.value)}
+                />
+                <Input
+                  placeholder="Authentik group name"
+                  value={authentikGroupName}
+                  className="w-1/2"
+                  onChange={(e) => setAuthentikGroupName(e.target.value)}
+                />
+              </div>
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded"
                 onClick={() => setStep(2)}
@@ -144,6 +156,11 @@ export default function UpdateRole() {
                 Next
               </button>
             </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              If you set an Authentik group name here, OIDC logins will
+              synchronize this role from the userinfo group claims and overwrite
+              manual role assignments for that user.
+            </p>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
@@ -182,8 +199,8 @@ export default function UpdateRole() {
                             } else {
                               setSelectedPermissions(
                                 selectedPermissions.filter(
-                                  (p) => p !== permission
-                                )
+                                  (p) => p !== permission,
+                                ),
                               );
                             }
                           }}
@@ -248,7 +265,7 @@ export default function UpdateRole() {
                             setSelectedUsers([...selectedUsers, user.id]);
                           } else {
                             setSelectedUsers(
-                              selectedUsers.filter((id) => id !== user.id)
+                              selectedUsers.filter((id) => id !== user.id),
                             );
                           }
                         }}

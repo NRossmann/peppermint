@@ -66,6 +66,7 @@ model Role {
   id          String   @id @default(uuid())
   name        String   @unique
   description String?
+  authentikGroupName String?
   permissions Json[]
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())

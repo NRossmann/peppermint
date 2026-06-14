@@ -10,8 +10,8 @@ export default function Login({}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("idle");
-  const [auth, setAuth] = useState("oauth");
   const [url, setUrl] = useState("");
+  const [ssoError, setSsoError] = useState("");
 
   async function postData() {
     try {
@@ -54,16 +54,27 @@ export default function Login({}) {
   }
 
   async function oidcLogin() {
-    await fetch(`/api/v1/auth/check`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success && res.url) {
-          setUrl(res.url);
-        }
-      });
+    try {
+      const res = await fetch(`/api/v1/auth/check`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }).then((response) => response.json());
+
+      if (res.success && res.url) {
+        setUrl(res.url);
+        setSsoError("");
+        return;
+      }
+
+      setUrl("");
+      if (res.message) {
+        setSsoError(res.message);
+      }
+    } catch (error) {
+      console.error("Failed to load SSO configuration", error);
+      setUrl("");
+      setSsoError("SSO is currently unavailable.");
+    }
   }
 
   useEffect(() => {
@@ -173,6 +184,12 @@ export default function Login({}) {
                   >
                     Sign in with OIDC
                   </button>
+                )}
+
+                {!url && ssoError && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    {ssoError}
+                  </p>
                 )}
               </div>
             </div>

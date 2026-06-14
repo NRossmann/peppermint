@@ -31,7 +31,7 @@ async function getUserEmails(token: string) {
 
   // Return only the primary email address
   const primaryEmail = res.data.find(
-    (email: { primary: boolean }) => email.primary
+    (email: { primary: boolean }) => email.primary,
   );
   return primaryEmail ? primaryEmail.email : null; // Return the email or null if not found
 }
@@ -55,6 +55,36 @@ async function tracking(event: string, properties: any) {
     properties: properties,
     distinctId: "uuid",
   });
+}
+
+function getOidcGroupClaims(userInfo: Record<string, any>): string[] {
+  const claimCandidates = [
+    userInfo.groups,
+    userInfo.group,
+    userInfo.roles,
+    userInfo.role,
+    userInfo["ak_groups"],
+    userInfo["https://schemas.goauthentik.io/claims/groups"],
+    userInfo["https://schemas.goauthentik.io/claims/roles"],
+    userInfo?.attributes?.groups,
+    userInfo?.attributes?.roles,
+  ];
+
+  const flattenedClaims = claimCandidates.flatMap((claim) => {
+    if (Array.isArray(claim)) {
+      return claim;
+    }
+
+    if (typeof claim === "string" && claim.length > 0) {
+      return [claim];
+    }
+
+    return [];
+  });
+
+  return [
+    ...new Set(flattenedClaims.filter((group) => typeof group === "string")),
+  ];
 }
 
 export function authRoutes(fastify: FastifyInstance) {
@@ -122,7 +152,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Register a new external user
@@ -184,7 +214,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Forgot password & generate code
@@ -224,7 +254,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Check code & uuid us valid
@@ -247,7 +277,7 @@ export function authRoutes(fastify: FastifyInstance) {
           success: true,
         });
       }
-    }
+    },
   );
 
   // Reset users password via code
@@ -280,7 +310,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // User password login route
@@ -336,7 +366,7 @@ export function authRoutes(fastify: FastifyInstance) {
         {
           expiresIn: "8h",
           algorithm: "HS256",
-        }
+        },
       );
 
       // Store session with additional security info
@@ -370,7 +400,7 @@ export function authRoutes(fastify: FastifyInstance) {
         token,
         user: data,
       });
-    }
+    },
   );
 
   // Checks if a user is password auth or other
@@ -403,77 +433,70 @@ export function authRoutes(fastify: FastifyInstance) {
       }
 
       // Find out which config type it is, then action accordinly
-      switch (provider) {
-        case "oidc":
-          const config = await getOidcConfig();
-          if (!config) {
-            return reply
-              .code(500)
-              .send({ error: "OIDC configuration not found" });
-          }
+      try {
+        switch (provider) {
+          case "oidc": {
+            const config = await getOidcConfig();
+            const oidcClient = await getOidcClient(config);
 
-          const oidcClient = await getOidcClient(config);
+            const codeVerifier = generators.codeVerifier();
+            const codeChallenge = generators.codeChallenge(codeVerifier);
+            const state = generators.state();
 
-          // Generate codeVerifier and codeChallenge
-          const codeVerifier = generators.codeVerifier();
-          const codeChallenge = generators.codeChallenge(codeVerifier);
+            cache.set(state, {
+              codeVerifier,
+            });
 
-          // Generate a random state parameter
-          const state = generators.state();
+            const url = oidcClient.authorizationUrl({
+              scope: "openid email profile",
+              response_type: "code",
+              redirect_uri: config.redirectUri,
+              code_challenge: codeChallenge,
+              code_challenge_method: "S256",
+              state,
+            });
 
-          // Store codeVerifier in cache with s
-          cache.set(state, {
-            codeVerifier: codeVerifier,
-          });
-
-          // Generate authorization URL
-          const url = oidcClient.authorizationUrl({
-            scope: "openid email profile",
-            response_type: "code",
-            redirect_uri: config.redirectUri,
-            code_challenge: codeChallenge,
-            code_challenge_method: "S256", // Use 'plain' if 'S256' is not supported
-            state: state,
-          });
-
-          reply.send({
-            type: "oidc",
-            success: true,
-            url: url,
-          });
-
-          break;
-        case "oauth":
-          const oauthProvider = await getOAuthProvider();
-
-          if (!oauthProvider) {
-            return reply.code(500).send({
-              error: `OAuth provider ${provider} configuration not found`,
+            return reply.send({
+              type: "oidc",
+              success: true,
+              url,
             });
           }
+          case "oauth": {
+            const oauthProvider = await getOAuthProvider();
 
-          const client = getOAuthClient({
-            ...oauthProvider,
-            name: oauthProvider.name,
-          });
+            const client = getOAuthClient({
+              ...oauthProvider,
+              name: oauthProvider.name,
+            });
 
-          // Generate authorization URL
-          const uri = client.authorizeURL({
-            redirect_uri: oauthProvider.redirectUri,
-            scope: oauthProvider.scope,
-          });
+            const uri = client.authorizeURL({
+              redirect_uri: oauthProvider.redirectUri,
+              scope: oauthProvider.scope,
+            });
 
-          reply.send({
-            type: "oauth",
-            success: true,
-            url: uri,
-          });
+            return reply.send({
+              type: "oauth",
+              success: true,
+              url: uri,
+            });
+          }
+          default:
+            return reply.code(200).send({
+              success: false,
+              message: "Unsupported SSO provider",
+            });
+        }
+      } catch (error: any) {
+        console.error("SSO availability check failed:", error);
 
-          break;
-        default:
-          break;
+        return reply.code(200).send({
+          success: false,
+          message: "SSO is configured but not ready",
+          details: error.message,
+        });
       }
-    }
+    },
   );
 
   // oidc api callback route
@@ -482,24 +505,16 @@ export function authRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const oidc = await getOidcConfig();
-
-        const config = await getOidcClient(oidc);
-        if (!config) {
-          return reply
-            .code(500)
-            .send({ error: "OIDC configuration not properly set" });
-        }
-
-        const oidcClient = await getOidcClient(config);
+        const oidcClient = await getOidcClient(oidc);
 
         // Parse the callback parameters
         const params = oidcClient.callbackParams(request.raw);
 
-        if (params.iss === "undefined") {
+        if (!params.iss || params.iss === "undefined") {
           // Remove the trailing part and ensure a trailing slash
           params.iss = oidc.issuer.replace(
             /\/\.well-known\/openid-configuration$/,
-            "/"
+            "/",
           );
         }
 
@@ -520,14 +535,12 @@ export function authRoutes(fastify: FastifyInstance) {
         }
 
         let tokens = await oidcClient.callback(
-          (
-            await oidc
-          ).redirectUri,
+          (await oidc).redirectUri,
           params,
           {
             code_verifier: codeVerifier,
             state: state,
-          }
+          },
         );
 
         // Clean up: Remove the codeVerifier from the cache
@@ -535,6 +548,8 @@ export function authRoutes(fastify: FastifyInstance) {
 
         // Retrieve user information
         const userInfo = await oidcClient.userinfo(tokens.access_token);
+
+        const userGroups = getOidcGroupClaims(userInfo);
 
         let user = await prisma.user.findUnique({
           where: { email: userInfo.email },
@@ -557,6 +572,26 @@ export function authRoutes(fastify: FastifyInstance) {
           });
         }
 
+        const mappedRoles = await prisma.role.findMany({
+          where: {
+            authentikGroupName: {
+              in: userGroups,
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            roles: {
+              set: mappedRoles.map((role) => ({ id: role.id })),
+            },
+          },
+        });
+
         var b64string = process.env.SECRET;
         var secret = new Buffer(b64string!, "base64"); // Ta-da
 
@@ -566,7 +601,7 @@ export function authRoutes(fastify: FastifyInstance) {
             data: { id: user.id },
           },
           secret,
-          { expiresIn: "8h" }
+          { expiresIn: "8h" },
         );
 
         // Create a session
@@ -589,10 +624,9 @@ export function authRoutes(fastify: FastifyInstance) {
         reply.status(403).send({
           success: false,
           error: "OIDC callback error",
-          details: error.message,
         });
       }
-    }
+    },
   );
 
   // oauth api callback route
@@ -635,7 +669,7 @@ export function authRoutes(fastify: FastifyInstance) {
             headers: {
               Authorization: `Bearer ${access_token}`,
             },
-          }
+          },
         );
 
         const emails =
@@ -664,7 +698,7 @@ export function authRoutes(fastify: FastifyInstance) {
             data: { id: user.id },
           },
           secret,
-          { expiresIn: "8h" }
+          { expiresIn: "8h" },
         );
 
         // Create a session
@@ -692,7 +726,7 @@ export function authRoutes(fastify: FastifyInstance) {
           details: error.message,
         });
       }
-    }
+    },
   );
 
   // Delete a user
@@ -739,7 +773,7 @@ export function authRoutes(fastify: FastifyInstance) {
       });
 
       reply.send({ success: true });
-    }
+    },
   );
 
   // User Profile
@@ -794,7 +828,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         user: data,
       });
-    }
+    },
   );
 
   // Reset Users password
@@ -819,7 +853,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Reset password by admin
@@ -863,7 +897,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Update a users profile/config
@@ -893,7 +927,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         user,
       });
-    }
+    },
   );
 
   // Update a users Email notification settings
@@ -925,7 +959,7 @@ export function authRoutes(fastify: FastifyInstance) {
       reply.send({
         user,
       });
-    }
+    },
   );
 
   // Logout a user (deletes session)
@@ -939,7 +973,7 @@ export function authRoutes(fastify: FastifyInstance) {
       });
 
       reply.send({ success: true });
-    }
+    },
   );
 
   // Update a users role
@@ -979,7 +1013,7 @@ export function authRoutes(fastify: FastifyInstance) {
           success: false,
         });
       }
-    }
+    },
   );
 
   // first login
@@ -998,7 +1032,7 @@ export function authRoutes(fastify: FastifyInstance) {
       await tracking("user_first_login", {});
 
       reply.send({ success: true });
-    }
+    },
   );
 
   // Add a new endpoint to list and manage active sessions
@@ -1022,7 +1056,7 @@ export function authRoutes(fastify: FastifyInstance) {
       });
 
       reply.send({ sessions });
-    }
+    },
   );
 
   // Add ability to revoke specific sessions
@@ -1053,6 +1087,6 @@ export function authRoutes(fastify: FastifyInstance) {
       });
 
       reply.send({ success: true });
-    }
+    },
   );
 }
