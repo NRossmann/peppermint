@@ -8,6 +8,7 @@ import { emailQueueRoutes } from "./controllers/queue";
 import { roleRoutes } from "./controllers/roles";
 import { objectStoreRoutes } from "./controllers/storage";
 import { ticketRoutes } from "./controllers/ticket";
+import { ticketStateRoutes } from "./controllers/ticketStates";
 import { timeTrackingRoutes } from "./controllers/time";
 import { userRoutes } from "./controllers/users";
 import { webhookRoutes } from "./controllers/webhooks";
@@ -17,6 +18,7 @@ export function registerRoutes(fastify: FastifyInstance) {
   emailQueueRoutes(fastify);
   dataRoutes(fastify);
   ticketRoutes(fastify);
+  ticketStateRoutes(fastify);
   userRoutes(fastify);
   notebookRoutes(fastify);
   clientRoutes(fastify);

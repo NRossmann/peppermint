@@ -2,6 +2,7 @@ import EmailReplyParser from "email-reply-parser";
 import Imap from "imap";
 import { simpleParser } from "mailparser";
 import { prisma } from "../../prisma";
+import { getDefaultTicketState } from "../ticketStates";
 import { EmailConfig, EmailQueue } from "../types/email";
 import { AuthService } from "./auth.service";
 
@@ -25,9 +26,8 @@ export class ImapService {
   private static async getImapConfig(queue: EmailQueue): Promise<EmailConfig> {
     switch (queue.serviceType) {
       case "gmail": {
-        const validatedAccessToken = await AuthService.getValidAccessToken(
-          queue
-        );
+        const validatedAccessToken =
+          await AuthService.getValidAccessToken(queue);
 
         return {
           user: queue.username,
@@ -36,7 +36,7 @@ export class ImapService {
           tls: true,
           xoauth2: AuthService.generateXOAuth2Token(
             queue.username,
-            validatedAccessToken
+            validatedAccessToken,
           ),
           tlsOptions: { rejectUnauthorized: false, servername: queue.hostname },
         };
@@ -57,7 +57,7 @@ export class ImapService {
 
   private static async processEmail(
     parsed: any,
-    isReply: boolean
+    isReply: boolean,
   ): Promise<void> {
     const { from, subject, text, html, textAsHtml } = parsed;
 
@@ -66,7 +66,7 @@ export class ImapService {
     if (isReply) {
       // First try to match UUID format
       const uuidMatch = subject.match(
-        /(?:ref:|#)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
+        /(?:ref:|#)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
       );
       console.log("UUID MATCH", uuidMatch);
 
@@ -113,12 +113,20 @@ export class ImapService {
         },
       });
 
+      const defaultState = await getDefaultTicketState();
+
+      if (!defaultState) {
+        throw new Error("No default ticket state configured");
+      }
+
       await prisma.ticket.create({
         data: {
           email: from.value[0].address,
           name: from.value[0].name,
           title: imapEmail.subject || "-",
-          isComplete: false,
+          state: {
+            connect: { id: defaultState.id },
+          },
           priority: "low",
           fromImap: true,
           detail: html || textAsHtml,

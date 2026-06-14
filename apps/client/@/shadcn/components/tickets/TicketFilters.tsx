@@ -1,6 +1,13 @@
 import { cn } from "@/shadcn/lib/utils";
 import { Button } from "@/shadcn/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shadcn/ui/command";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/shadcn/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shadcn/ui/popover";
 import { CheckIcon, Filter } from "lucide-react";
 import { useState } from "react";
@@ -9,6 +16,7 @@ import FilterBadge from "./FilterBadge";
 interface TicketFiltersProps {
   selectedPriorities: string[];
   selectedStatuses: string[];
+  statusOptions: string[];
   selectedAssignees: string[];
   users: any[];
   onPriorityToggle: (priority: string) => void;
@@ -22,6 +30,7 @@ type FilterType = "priority" | "status" | "assignee" | null;
 export default function TicketFilters({
   selectedPriorities,
   selectedStatuses,
+  statusOptions,
   selectedAssignees,
   users,
   onPriorityToggle,
@@ -33,19 +42,19 @@ export default function TicketFilters({
   const [filterSearch, setFilterSearch] = useState("");
 
   const priorities = ["low", "normal", "high"];
-  const statuses = ["open", "closed"];
-  const assignees = ["Unassigned", ...users.map(u => u.name)];
+  const statuses = statusOptions;
+  const assignees = ["Unassigned", ...users.map((u) => u.name)];
 
   const filteredPriorities = priorities.filter((priority) =>
-    priority.toLowerCase().includes(filterSearch.toLowerCase())
+    priority.toLowerCase().includes(filterSearch.toLowerCase()),
   );
 
   const filteredStatuses = statuses.filter((status) =>
-    status.toLowerCase().includes(filterSearch.toLowerCase())
+    status.toLowerCase().includes(filterSearch.toLowerCase()),
   );
 
   const filteredAssignees = assignees.filter((assignee) =>
-    assignee.toLowerCase().includes(filterSearch.toLowerCase())
+    assignee.toLowerCase().includes(filterSearch.toLowerCase()),
   );
 
   return (
@@ -60,8 +69,8 @@ export default function TicketFilters({
         <PopoverContent className="w-[300px] p-0" align="start">
           {!activeFilter ? (
             <Command>
-              <CommandInput 
-                placeholder="Search filters..." 
+              <CommandInput
+                placeholder="Search filters..."
                 value={filterSearch}
                 onValueChange={setFilterSearch}
               />
@@ -82,7 +91,7 @@ export default function TicketFilters({
             </Command>
           ) : (
             <Command>
-              <CommandInput 
+              <CommandInput
                 placeholder={`Search ${activeFilter}...`}
                 value={filterSearch}
                 onValueChange={setFilterSearch}
@@ -105,7 +114,7 @@ export default function TicketFilters({
                             "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                             selectedPriorities.includes(priority)
                               ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible"
+                              : "opacity-50 [&_svg]:invisible",
                           )}
                         >
                           <CheckIcon className={cn("h-4 w-4")} />
@@ -129,7 +138,7 @@ export default function TicketFilters({
                             "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                             selectedStatuses.includes(status)
                               ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible"
+                              : "opacity-50 [&_svg]:invisible",
                           )}
                         >
                           <CheckIcon className={cn("h-4 w-4")} />
@@ -153,7 +162,7 @@ export default function TicketFilters({
                             "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                             selectedAssignees.includes(assignee)
                               ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible"
+                              : "opacity-50 [&_svg]:invisible",
                           )}
                         >
                           <CheckIcon className={cn("h-4 w-4")} />
@@ -208,4 +217,4 @@ export default function TicketFilters({
       </div>
     </div>
   );
-} 
+}

@@ -121,37 +121,50 @@ model Team {
   Ticket  Ticket[]
 }
 
+model TicketState {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+  name       String   @unique
+  slug       String   @unique
+  color      String?
+  order      Int      @default(0)
+  isResolved Boolean  @default(false)
+
+  tickets Ticket[]
+}
+
 model Ticket {
-  id         String       @id @default(uuid())
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @default(now())
-  name       String?
-  title      String
-  detail     String?
-  email      String?
-  note       String?
-  isComplete Boolean
-  priority   String
-  linked     Json?
-  fromImap   Boolean
-  Number     Int          @default(autoincrement())
-  status     TicketStatus @default(needs_support)
-  type       TicketType   @default(support)
-  hidden     Boolean      @default(false)
-  createdBy  Json?
-  locked     Boolean      @default(false)
-  following  Json?
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  name      String?
+  title     String
+  detail    String?
+  email     String?
+  note      String?
+  priority  String
+  linked    Json?
+  fromImap  Boolean
+  Number    Int        @default(autoincrement())
+  type      TicketType @default(support)
+  hidden    Boolean    @default(false)
+  createdBy Json?
+  locked    Boolean    @default(false)
+  following Json?
 
   TicketFile   TicketFile[]
   Comment      Comment[]
   TimeTracking TimeTracking[]
 
-  team       Team?   @relation(fields: [teamId], references: [id])
-  teamId     String?
-  assignedTo User?   @relation(fields: [userId], references: [id])
-  client     Client? @relation(fields: [clientId], references: [id])
-  clientId   String?
-  userId     String?
+  team      Team?        @relation(fields: [teamId], references: [id])
+  teamId    String?
+  assignedTo User?       @relation(fields: [userId], references: [id])
+  client    Client?      @relation(fields: [clientId], references: [id])
+  state     TicketState  @relation(fields: [stateId], references: [id])
+  clientId  String?
+  userId    String?
+  stateId   String
 
   knowledgeBase knowledgeBase[]
   notifications notifications[]
@@ -416,14 +429,6 @@ model emailTemplate {
 enum Hook {
   ticket_created
   ticket_status_changed
-}
-
-enum TicketStatus {
-  hold
-  needs_support
-  in_progress
-  in_review
-  done
 }
 
 enum TicketType {

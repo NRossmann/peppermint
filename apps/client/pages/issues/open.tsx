@@ -73,7 +73,7 @@ export default function Tickets() {
     () => getUserTickets(token),
     {
       refetchInterval: 5000,
-    }
+    },
   );
 
   const user = useUser();
@@ -100,21 +100,21 @@ export default function Tickets() {
   useEffect(() => {
     localStorage.setItem(
       "open_selectedPriorities",
-      JSON.stringify(selectedPriorities)
+      JSON.stringify(selectedPriorities),
     );
   }, [selectedPriorities]);
 
   useEffect(() => {
     localStorage.setItem(
       "open_selectedStatuses",
-      JSON.stringify(selectedStatuses)
+      JSON.stringify(selectedStatuses),
     );
   }, [selectedStatuses]);
 
   useEffect(() => {
     localStorage.setItem(
       "open_selectedAssignees",
-      JSON.stringify(selectedAssignees)
+      JSON.stringify(selectedAssignees),
     );
   }, [selectedAssignees]);
 
@@ -131,7 +131,7 @@ export default function Tickets() {
     setSelectedPriorities((prev) =>
       prev.includes(priority)
         ? prev.filter((p) => p !== priority)
-        : [...prev, priority]
+        : [...prev, priority],
     );
   };
 
@@ -139,7 +139,7 @@ export default function Tickets() {
     setSelectedStatuses((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status],
     );
   };
 
@@ -147,7 +147,7 @@ export default function Tickets() {
     setSelectedAssignees((prev) =>
       prev.includes(assignee)
         ? prev.filter((a) => a !== assignee)
-        : [...prev, assignee]
+        : [...prev, assignee],
     );
   };
 
@@ -158,7 +158,7 @@ export default function Tickets() {
           selectedPriorities.includes(ticket.priority);
         const statusMatch =
           selectedStatuses.length === 0 ||
-          selectedStatuses.includes(ticket.isComplete ? "closed" : "open");
+          selectedStatuses.includes(ticket.state.name);
         const assigneeMatch =
           selectedAssignees.length === 0 ||
           selectedAssignees.includes(ticket.assignedTo?.name || "Unassigned");
@@ -174,14 +174,20 @@ export default function Tickets() {
   const filteredPriorities = useMemo(() => {
     const priorities = ["low", "medium", "high"];
     return priorities.filter((priority) =>
-      priority.toLowerCase().includes(filterSearch.toLowerCase())
+      priority.toLowerCase().includes(filterSearch.toLowerCase()),
     );
   }, [filterSearch]);
 
   const filteredStatuses = useMemo(() => {
-    const statuses = ["open", "closed"];
+    const statuses: string[] = Array.from(
+      new Set(
+        (data?.tickets || [])
+          .map((ticket) => ticket.state?.name)
+          .filter((value): value is string => Boolean(value)),
+      ),
+    );
     return statuses.filter((status) =>
-      status.toLowerCase().includes(filterSearch.toLowerCase())
+      status.toLowerCase().includes(filterSearch.toLowerCase()),
     );
   }, [filterSearch]);
 
@@ -190,7 +196,7 @@ export default function Tickets() {
       .map((t) => t.assignedTo?.name || "Unassigned")
       .filter((name, index, self) => self.indexOf(name) === index);
     return assignees?.filter((assignee) =>
-      assignee.toLowerCase().includes(filterSearch.toLowerCase())
+      assignee.toLowerCase().includes(filterSearch.toLowerCase()),
     );
   }, [data?.tickets, filterSearch]);
 
@@ -217,12 +223,15 @@ export default function Tickets() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: ticket.id, status: !ticket.isComplete }),
+      body: JSON.stringify({
+        id: ticket.id,
+        status: !ticket.state?.isResolved,
+      }),
     })
       .then((res) => res.json())
       .then(() => {
         toast({
-          title: ticket.isComplete ? "Issue re-opened" : "Issue closed",
+          title: ticket.state?.isResolved ? "Issue re-opened" : "Issue closed",
           description: "The status of the issue has been updated.",
           duration: 3000,
         });
@@ -277,7 +286,7 @@ export default function Tickets() {
           note: ticket.note,
           title: ticket.title,
           priority: priority,
-          status: ticket.status,
+          stateId: ticket.stateId,
         }),
       }).then((res) => res.json());
 
@@ -372,7 +381,7 @@ export default function Tickets() {
                                     "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                                     selectedPriorities.includes(priority)
                                       ? "bg-primary text-primary-foreground"
-                                      : "opacity-50 [&_svg]:invisible"
+                                      : "opacity-50 [&_svg]:invisible",
                                   )}
                                 >
                                   <CheckIcon className={cn("h-4 w-4")} />
@@ -415,7 +424,7 @@ export default function Tickets() {
                                     "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                                     selectedStatuses.includes(status)
                                       ? "bg-primary text-primary-foreground"
-                                      : "opacity-50 [&_svg]:invisible"
+                                      : "opacity-50 [&_svg]:invisible",
                                   )}
                                 >
                                   <CheckIcon className={cn("h-4 w-4")} />
@@ -458,7 +467,7 @@ export default function Tickets() {
                                     "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                                     selectedAssignees.includes(name)
                                       ? "bg-primary text-primary-foreground"
-                                      : "opacity-50 [&_svg]:invisible"
+                                      : "opacity-50 [&_svg]:invisible",
                                   )}
                                 >
                                   <CheckIcon className={cn("h-4 w-4")} />
@@ -570,7 +579,7 @@ export default function Tickets() {
                               </span>
                             </div>
                             <div>
-                              {ticket.isComplete === true ? (
+                              {ticket.state?.isResolved ? (
                                 <div>
                                   <span className="inline-flex items-center gap-x-1.5 rounded-md bg-red-100 px-2 w-20 justify-center py-1 text-xs ring-1 ring-inset ring-gray-500/10 font-medium text-red-700">
                                     <svg
@@ -620,7 +629,9 @@ export default function Tickets() {
                       <ContextMenuItem
                         onClick={(e) => updateTicketStatus(e, ticket)}
                       >
-                        {ticket.isComplete ? "Re-open Issue" : "Close Issue"}
+                        {ticket.state?.isResolved
+                          ? "Re-open Issue"
+                          : "Close Issue"}
                       </ContextMenuItem>
                       <ContextMenuSeparator />
 
@@ -640,7 +651,7 @@ export default function Tickets() {
                                       "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                                       ticket.assignedTo?.name === user.name
                                         ? "bg-primary text-primary-foreground"
-                                        : "opacity-50 [&_svg]:invisible"
+                                        : "opacity-50 [&_svg]:invisible",
                                     )}
                                   >
                                     <CheckIcon className={cn("h-4 w-4")} />
@@ -659,7 +670,7 @@ export default function Tickets() {
                                         "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                                         ticket.assignedTo?.name === user.name
                                           ? "bg-primary text-primary-foreground"
-                                          : "opacity-50 [&_svg]:invisible"
+                                          : "opacity-50 [&_svg]:invisible",
                                       )}
                                     >
                                       <CheckIcon className={cn("h-4 w-4")} />
@@ -694,7 +705,7 @@ export default function Tickets() {
                                         ticket.priority.toLowerCase() ===
                                           priority
                                           ? "bg-primary text-primary-foreground"
-                                          : "opacity-50 [&_svg]:invisible"
+                                          : "opacity-50 [&_svg]:invisible",
                                       )}
                                     >
                                       <CheckIcon className={cn("h-4 w-4")} />
@@ -722,7 +733,7 @@ export default function Tickets() {
                             duration: 3000,
                           });
                           navigator.clipboard.writeText(
-                            `${window.location.origin}/issue/${ticket.id}`
+                            `${window.location.origin}/issue/${ticket.id}`,
                           );
                         }}
                       >
@@ -741,7 +752,7 @@ export default function Tickets() {
                               e.preventDefault();
                               if (
                                 confirm(
-                                  "Are you sure you want to delete this ticket?"
+                                  "Are you sure you want to delete this ticket?",
                                 )
                               ) {
                                 fetch(`/api/v1/ticket/delete`, {

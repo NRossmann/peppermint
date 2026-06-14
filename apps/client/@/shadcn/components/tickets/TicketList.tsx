@@ -1,7 +1,13 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '@/shadcn/ui/context-menu';
-import moment from 'moment';
-import Link from 'next/link';
-import { Ticket, UISettings } from '../../types/tickets';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/shadcn/ui/context-menu";
+import moment from "moment";
+import Link from "next/link";
+import { Ticket, UISettings } from "../../types/tickets";
 
 interface TicketListProps {
   tickets: Ticket[];
@@ -22,7 +28,7 @@ export default function TicketList({
   onDelete,
   users,
   currentUser,
-  uiSettings
+  uiSettings,
 }: TicketListProps) {
   const high = "bg-red-100 text-red-800";
   const low = "bg-blue-100 text-blue-800";
@@ -41,9 +47,13 @@ export default function TicketList({
                 <div className="flex flex-row w-full bg-white dark:bg-[#0A090C] dark:hover:bg-green-600 border-b-[1px] p-1.5 justify-between px-6 hover:bg-gray-100">
                   <div className="flex flex-row items-center space-x-4">
                     {uiSettings.showTicketNumbers && (
-                      <span className="text-xs font-semibold">#{ticket.Number}</span>
+                      <span className="text-xs font-semibold">
+                        #{ticket.Number}
+                      </span>
                     )}
-                    <span className="text-xs font-semibold">{ticket.title}</span>
+                    <span className="text-xs font-semibold">
+                      {ticket.title}
+                    </span>
                   </div>
                   <div className="flex flex-row space-x-3 items-center">
                     {uiSettings.showDates && (
@@ -52,12 +62,16 @@ export default function TicketList({
                       </span>
                     )}
                     {uiSettings.showType && (
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 capitalize justify-center w-20 text-xs font-medium ring-1 ring-inset ring-gray-500/10 bg-orange-400 text-white`}>
+                      <span
+                        className={`inline-flex items-center rounded-md px-2 py-1 capitalize justify-center w-20 text-xs font-medium ring-1 ring-inset ring-gray-500/10 bg-orange-400 text-white`}
+                      >
                         {ticket.type}
                       </span>
                     )}
                     {uiSettings.showPriority && (
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 capitalize justify-center w-20 text-xs font-medium ring-1 ring-inset ring-gray-500/10 ${badge}`}>
+                      <span
+                        className={`inline-flex items-center rounded-md px-2 py-1 capitalize justify-center w-20 text-xs font-medium ring-1 ring-inset ring-gray-500/10 ${badge}`}
+                      >
                         {ticket.priority}
                       </span>
                     )}
@@ -74,7 +88,7 @@ export default function TicketList({
             </ContextMenuTrigger>
             <ContextMenuContent>
               <ContextMenuItem onClick={() => onStatusChange(ticket)}>
-                {ticket.isComplete ? "Re-open Issue" : "Close Issue"}
+                {ticket.state?.isResolved ? "Re-open Issue" : "Close Issue"}
               </ContextMenuItem>
               <ContextMenuSeparator />
             </ContextMenuContent>
@@ -83,4 +97,4 @@ export default function TicketList({
       })}
     </div>
   );
-} 
+}

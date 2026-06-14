@@ -23,7 +23,7 @@ export default function Tickets() {
 
   const token = getCookie("session");
   const { data, status, error } = useQuery("allusertickets", () =>
-    getUserTickets(token)
+    getUserTickets(token),
   );
 
   const high = "bg-red-100 text-red-800";
@@ -77,7 +77,7 @@ export default function Tickets() {
                           </span>
                         </div>
                         <div>
-                          {ticket.isComplete === true ? (
+                          {ticket.state?.isResolved ? (
                             <div>
                               <span className="inline-flex items-center gap-x-1.5 rounded-md bg-red-100 px-2 w-20 justify-center py-1 text-xs ring-1 ring-inset ring-gray-500/10 font-medium text-red-700">
                                 <svg

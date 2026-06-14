@@ -1,32 +1,32 @@
 import { Button } from "@radix-ui/themes";
 import {
-    AlertCircle,
-    CheckCircle2,
-    Circle,
-    Clock,
-    Plus,
-    Search,
-    Settings,
-    SignalHigh,
-    SignalLow,
-    SignalMedium,
-    Timer,
-    Trash2,
-    User,
-    User2,
-    UserPlus2,
+  AlertCircle,
+  CheckCircle2,
+  Circle,
+  Clock,
+  Plus,
+  Search,
+  Settings,
+  SignalHigh,
+  SignalLow,
+  SignalMedium,
+  Timer,
+  Trash2,
+  User,
+  User2,
+  UserPlus2,
 } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/router";
 
 import {
-    CommandDialog,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    CommandSeparator
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
 } from "@/shadcn/ui/command";
 import { getCookie } from "cookies-next";
 import { useEffect, useMemo, useState } from "react";
@@ -67,7 +67,7 @@ export function CommandMenu() {
     },
     {
       enabled: open, // Only fetch when command menu is open
-    }
+    },
   );
 
   const { data: usersData } = useQuery(
@@ -83,7 +83,7 @@ export function CommandMenu() {
     },
     {
       enabled: open, // Only fetch when command menu is open
-    }
+    },
   );
 
   const {
@@ -126,21 +126,21 @@ export function CommandMenu() {
 
     // Group by status
     const groups = {
-      open: filtered.filter(t => !t.isComplete),
-      closed: filtered.filter(t => t.isComplete),
+      open: filtered.filter((t) => !t.state?.isResolved),
+      closed: filtered.filter((t) => t.state?.isResolved),
     };
 
     return groups;
   }, [ticketsData, search]);
 
   const getStatusIcon = (ticket: Ticket) => {
-    if (ticket.isComplete) return CheckCircle2;
+    if (ticket.state?.isResolved) return CheckCircle2;
     switch (ticket.priority.toLowerCase()) {
-      case 'high':
+      case "high":
         return AlertCircle;
-      case 'medium':
+      case "medium":
         return Clock;
-      case 'low':
+      case "low":
         return Timer;
       default:
         return Circle;
@@ -149,14 +149,14 @@ export function CommandMenu() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'high':
-        return 'text-red-500';
-      case 'medium':
-        return 'text-yellow-500';
-      case 'low':
-        return 'text-blue-500';
+      case "high":
+        return "text-red-500";
+      case "medium":
+        return "text-yellow-500";
+      case "low":
+        return "text-blue-500";
       default:
-        return 'text-gray-500';
+        return "text-gray-500";
     }
   };
 
@@ -174,8 +174,8 @@ export function CommandMenu() {
         </kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput 
-          placeholder="Search tickets by title, ID, description, or assignee..." 
+        <CommandInput
+          placeholder="Search tickets by title, ID, description, or assignee..."
           value={search}
           onValueChange={setSearch}
         />
@@ -224,7 +224,8 @@ export function CommandMenu() {
                     >
                       <span>{ticket.title}</span>
                       <span className="text-xs text-muted-foreground">
-                        #{ticket.id} • {ticket.assignedTo?.name || "Unassigned"} • {moment(ticket.createdAt).fromNow()}
+                        #{ticket.id} • {ticket.assignedTo?.name || "Unassigned"}{" "}
+                        • {moment(ticket.createdAt).fromNow()}
                       </span>
                     </CommandItem>
                   ))}
@@ -242,7 +243,8 @@ export function CommandMenu() {
                     >
                       <span>{ticket.title}</span>
                       <span className="text-xs text-muted-foreground">
-                        #{ticket.id} • {ticket.assignedTo?.name || "Unassigned"} • {moment(ticket.createdAt).fromNow()}
+                        #{ticket.id} • {ticket.assignedTo?.name || "Unassigned"}{" "}
+                        • {moment(ticket.createdAt).fromNow()}
                       </span>
                     </CommandItem>
                   ))}
@@ -262,7 +264,7 @@ export function CommandMenu() {
                 <CommandItem
                   onSelect={() => {
                     const ticket = ticketsData.find(
-                      (t: Ticket) => t.id === router.query.id
+                      (t: Ticket) => t.id === router.query.id,
                     );
                     if (ticket) {
                       updateTicketStatus(ticket);
@@ -280,7 +282,7 @@ export function CommandMenu() {
                     key={priority.value}
                     onSelect={() => {
                       const ticket = ticketsData.find(
-                        (t: Ticket) => t.id === router.query.id
+                        (t: Ticket) => t.id === router.query.id,
                       );
                       if (ticket) {
                         updateTicketPriority(ticket, priority.value);
@@ -303,7 +305,7 @@ export function CommandMenu() {
                           if (router.query.id) {
                             updateTicketAssignee(
                               router.query.id as string,
-                              user
+                              user,
                             );
                             setOpen(false);
                           }
@@ -318,7 +320,7 @@ export function CommandMenu() {
                         if (router.query.id) {
                           updateTicketAssignee(
                             router.query.id as string,
-                            undefined
+                            undefined,
                           );
                           setOpen(false);
                         }

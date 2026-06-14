@@ -16,6 +16,13 @@ import {
   activeStatusNotification,
   statusUpdateNotification,
 } from "../lib/notifications/issue/status";
+import {
+  getDefaultTicketState,
+  getTicketStateForResolution,
+  resolveTicketStateIdentifier,
+  serializeTicket,
+  ticketStateSelect,
+} from "../lib/ticketStates";
 import { sendWebhookNotification } from "../lib/notifications/webhook";
 import { requirePermission } from "../lib/roles";
 import { checkSession } from "../lib/session";
@@ -25,9 +32,66 @@ const validateEmail = (email: string) => {
   return String(email)
     .toLowerCase()
     .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     );
 };
+
+const ticketInclude = {
+  client: {
+    select: { id: true, name: true, number: true, notes: true },
+  },
+  assignedTo: {
+    select: { id: true, name: true },
+  },
+  team: {
+    select: { id: true, name: true },
+  },
+  state: {
+    select: ticketStateSelect,
+  },
+} as const;
+
+async function sendResolvedStatusWebhook(ticket: any, isResolved: boolean) {
+  const webhook = await prisma.webhooks.findMany({
+    where: {
+      type: "ticket_status_changed",
+    },
+  });
+
+  for (let i = 0; i < webhook.length; i++) {
+    const url = webhook[i].url;
+
+    if (webhook[i].active === true) {
+      const s = isResolved ? "Completed" : "Outstanding";
+      if (url.includes("discord.com")) {
+        const message = {
+          content: `Ticket ${ticket.id} created by ${ticket.email}, has had it's status changed to ${s}`,
+          avatar_url:
+            "https://avatars.githubusercontent.com/u/76014454?s=200&v=4",
+          username: "Peppermint.sh",
+        };
+        axios
+          .post(url, message)
+          .then((response) => {
+            console.log("Message sent successfully!");
+            console.log("Discord API response:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error sending message:", error);
+          });
+      } else {
+        await axios.post(`${webhook[i].url}`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            data: `Ticket ${ticket.id} created by ${ticket.email}, has had it's status changed to ${s}`,
+          }),
+        });
+      }
+    }
+  }
+}
 
 export function ticketRoutes(fastify: FastifyInstance) {
   fastify.post(
@@ -49,6 +113,14 @@ export function ticketRoutes(fastify: FastifyInstance) {
       }: any = request.body;
 
       const user = await checkSession(request);
+      const defaultState = await getDefaultTicketState();
+
+      if (!defaultState) {
+        return reply.status(500).send({
+          success: false,
+          message: "No default ticket state configured",
+        });
+      }
 
       const ticket: any = await prisma.ticket.create({
         data: {
@@ -73,14 +145,17 @@ export function ticketRoutes(fastify: FastifyInstance) {
                 }
               : undefined,
           fromImap: false,
+          state: {
+            connect: { id: defaultState.id },
+          },
           assignedTo:
             engineer && engineer.name !== "Unassigned"
               ? {
                   connect: { id: engineer.id },
                 }
               : undefined,
-          isComplete: Boolean(false),
         },
+        include: ticketInclude,
       });
 
       if (!email && !validateEmail(email)) {
@@ -136,7 +211,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         id: ticket.id,
       });
-    }
+    },
   );
 
   fastify.post(
@@ -153,6 +228,15 @@ export function ticketRoutes(fastify: FastifyInstance) {
         type,
         createdBy,
       }: any = request.body;
+
+      const defaultState = await getDefaultTicketState();
+
+      if (!defaultState) {
+        return reply.status(500).send({
+          success: false,
+          message: "No default ticket state configured",
+        });
+      }
 
       const ticket: any = await prisma.ticket.create({
         data: {
@@ -177,14 +261,17 @@ export function ticketRoutes(fastify: FastifyInstance) {
                 }
               : undefined,
           fromImap: false,
+          state: {
+            connect: { id: defaultState.id },
+          },
           assignedTo:
             engineer && engineer.name !== "Unassigned"
               ? {
                   connect: { id: engineer.id },
                 }
               : undefined,
-          isComplete: Boolean(false),
         },
+        include: ticketInclude,
       });
 
       if (!email && !validateEmail(email)) {
@@ -242,7 +329,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         id: ticket.id,
       });
-    }
+    },
   );
 
   // Get a ticket by id - requires auth
@@ -258,14 +345,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         where: {
           id: id,
         },
-        include: {
-          client: {
-            select: { id: true, name: true, number: true, notes: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-        },
+        include: ticketInclude,
       });
 
       const timeTracking = await prisma.timeTracking.findMany({
@@ -300,18 +380,18 @@ export function ticketRoutes(fastify: FastifyInstance) {
         },
       });
 
-      var t = {
+      var t = serializeTicket({
         ...ticket,
         comments: [...comments],
         TimeTracking: [...timeTracking],
         files: [...files],
-      };
+      });
 
       reply.send({
         ticket: t,
         sucess: true,
       });
-    }
+    },
   );
 
   // Get all tickets - requires auth
@@ -322,30 +402,20 @@ export function ticketRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const tickets = await prisma.ticket.findMany({
-        where: { isComplete: false, hidden: false },
+        where: { hidden: false, state: { isResolved: false } },
         orderBy: [
           {
             createdAt: "desc",
           },
         ],
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
-        },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Basic Search - requires auth
@@ -363,13 +433,14 @@ export function ticketRoutes(fastify: FastifyInstance) {
             contains: query,
           },
         },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         success: true,
       });
-    }
+    },
   );
 
   // Get all tickets (admin)
@@ -386,24 +457,14 @@ export function ticketRoutes(fastify: FastifyInstance) {
             createdAt: "desc",
           },
         ],
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
-        },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Get all open tickets for a user
@@ -414,25 +475,19 @@ export function ticketRoutes(fastify: FastifyInstance) {
       const user = await checkSession(request);
 
       const tickets = await prisma.ticket.findMany({
-        where: { isComplete: false, userId: user!.id, hidden: false },
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
+        where: {
+          userId: user!.id,
+          hidden: false,
+          state: { isResolved: false },
         },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Get all closed tickets
@@ -441,25 +496,15 @@ export function ticketRoutes(fastify: FastifyInstance) {
 
     async (request: FastifyRequest, reply: FastifyReply) => {
       const tickets = await prisma.ticket.findMany({
-        where: { isComplete: true, hidden: false },
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
-        },
+        where: { hidden: false, state: { isResolved: true } },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Get all unassigned tickets
@@ -469,17 +514,18 @@ export function ticketRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       const tickets = await prisma.ticket.findMany({
         where: {
-          isComplete: false,
-          assignedTo: null,
+          userId: null,
           hidden: false,
+          state: { isResolved: false },
         },
+        include: ticketInclude,
       });
 
       reply.send({
         success: true,
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
       });
-    }
+    },
   );
 
   // Update a ticket
@@ -489,38 +535,90 @@ export function ticketRoutes(fastify: FastifyInstance) {
       preHandler: requirePermission(["issue::update"]),
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { id, note, detail, title, priority, status, client }: any =
-        request.body;
+      const {
+        id,
+        note,
+        detail,
+        title,
+        priority,
+        status,
+        isComplete,
+        stateId,
+        client,
+      }: any = request.body;
 
       const user = await checkSession(request);
 
       const issue = await prisma.ticket.findUnique({
         where: { id: id },
+        include: {
+          state: {
+            select: ticketStateSelect,
+          },
+        },
       });
 
-      await prisma.ticket.update({
+      if (!issue) {
+        return reply.status(404).send({
+          success: false,
+          message: "Ticket not found",
+        });
+      }
+
+      let nextState = await resolveTicketStateIdentifier({ stateId, status });
+
+      if (!nextState && typeof isComplete === "boolean") {
+        nextState = await getTicketStateForResolution(isComplete);
+      }
+
+      if (
+        (stateId || status || typeof isComplete === "boolean") &&
+        !nextState
+      ) {
+        return reply.status(400).send({
+          success: false,
+          message: "Invalid ticket state",
+        });
+      }
+
+      const updatedIssue = await prisma.ticket.update({
         where: { id: id },
         data: {
           detail,
           note,
           title,
           priority,
-          status,
+          ...(nextState ? { stateId: nextState.id } : {}),
+        },
+        include: {
+          state: {
+            select: ticketStateSelect,
+          },
         },
       });
 
-      if (priority && issue!.priority !== priority) {
-        await priorityNotification(issue, user, issue!.priority, priority);
+      if (priority && issue.priority !== priority) {
+        await priorityNotification(issue, user, issue.priority, priority);
       }
 
-      if (status && issue!.status !== status) {
-        await statusUpdateNotification(issue, user, status);
+      if (nextState && issue.state?.id !== nextState.id) {
+        await statusUpdateNotification(issue, user, nextState.name);
+      }
+
+      if (nextState && issue.state?.isResolved !== nextState.isResolved) {
+        await activeStatusNotification(
+          updatedIssue,
+          user,
+          nextState.isResolved,
+        );
+        await sendTicketStatus(updatedIssue);
+        await sendResolvedStatusWebhook(updatedIssue, nextState.isResolved);
       }
 
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Transfer a ticket to another user
@@ -566,7 +664,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Transfer an Issue to another client
@@ -597,7 +695,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Link a ticket to another ticket
@@ -689,7 +787,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   fastify.post(
@@ -709,7 +807,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Update status of a ticket
@@ -723,10 +821,24 @@ export function ticketRoutes(fastify: FastifyInstance) {
 
       const user = await checkSession(request);
 
+      const nextState = await getTicketStateForResolution(Boolean(status));
+
+      if (!nextState) {
+        return reply.status(400).send({
+          success: false,
+          message: "No ticket state available for this resolution state",
+        });
+      }
+
       const ticket: any = await prisma.ticket.update({
         where: { id: id },
         data: {
-          isComplete: status,
+          stateId: nextState.id,
+        },
+        include: {
+          state: {
+            select: ticketStateSelect,
+          },
         },
       });
 
@@ -734,50 +846,12 @@ export function ticketRoutes(fastify: FastifyInstance) {
 
       await sendTicketStatus(ticket);
 
-      const webhook = await prisma.webhooks.findMany({
-        where: {
-          type: "ticket_status_changed",
-        },
-      });
-
-      for (let i = 0; i < webhook.length; i++) {
-        const url = webhook[i].url;
-
-        if (webhook[i].active === true) {
-          const s = status ? "Completed" : "Outstanding";
-          if (url.includes("discord.com")) {
-            const message = {
-              content: `Ticket ${ticket.id} created by ${ticket.email}, has had it's status changed to ${s}`,
-              avatar_url:
-                "https://avatars.githubusercontent.com/u/76014454?s=200&v=4",
-              username: "Peppermint.sh",
-            };
-            axios
-              .post(url, message)
-              .then((response) => {
-                console.log("Message sent successfully!");
-                console.log("Discord API response:", response.data);
-              })
-              .catch((error) => {
-                console.error("Error sending message:", error);
-              });
-          } else {
-            await axios.post(`${webhook[i].url}`, {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                data: `Ticket ${ticket.id} created by ${ticket.email}, has had it's status changed to ${s}`,
-              }),
-            });
-          }
-        }
-      }
+      await sendResolvedStatusWebhook(ticket, Boolean(status));
 
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Hide a ticket
@@ -799,7 +873,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Lock a ticket
@@ -821,7 +895,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Delete a ticket
@@ -840,14 +914,14 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Get all tickets that created via imap
   fastify.get(
     "/api/v1/tickets/imap/all",
 
-    async (request: FastifyRequest, reply: FastifyReply) => {}
+    async (request: FastifyRequest, reply: FastifyReply) => {},
   );
 
   // GET all ticket templates
@@ -870,7 +944,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         templates: templates,
       });
-    }
+    },
   );
 
   // GET ticket template by ID
@@ -892,7 +966,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         template: template,
       });
-    }
+    },
   );
 
   // PUT ticket template by ID
@@ -918,7 +992,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    }
+    },
   );
 
   // Get all open tickets for an external user
@@ -929,25 +1003,19 @@ export function ticketRoutes(fastify: FastifyInstance) {
       const user = await checkSession(request);
 
       const tickets = await prisma.ticket.findMany({
-        where: { isComplete: false, email: user!.email, hidden: false },
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
+        where: {
+          email: user!.email,
+          hidden: false,
+          state: { isResolved: false },
         },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Get all closed tickets for an external user
@@ -958,25 +1026,19 @@ export function ticketRoutes(fastify: FastifyInstance) {
       const user = await checkSession(request);
 
       const tickets = await prisma.ticket.findMany({
-        where: { isComplete: true, email: user!.email, hidden: false },
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
+        where: {
+          email: user!.email,
+          hidden: false,
+          state: { isResolved: true },
         },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Get all tickets for an external user
@@ -990,24 +1052,14 @@ export function ticketRoutes(fastify: FastifyInstance) {
 
       const tickets = await prisma.ticket.findMany({
         where: { email: user!.email, hidden: false },
-        include: {
-          client: {
-            select: { id: true, name: true, number: true },
-          },
-          assignedTo: {
-            select: { id: true, name: true },
-          },
-          team: {
-            select: { id: true, name: true },
-          },
-        },
+        include: ticketInclude,
       });
 
       reply.send({
-        tickets: tickets,
+        tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    }
+    },
   );
 
   // Subscribe to a ticket
@@ -1053,7 +1105,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           success: true,
         });
       }
-    }
+    },
   );
 
   // Unsubscribe from a ticket
@@ -1098,6 +1150,6 @@ export function ticketRoutes(fastify: FastifyInstance) {
           success: true,
         });
       }
-    }
+    },
   );
 }

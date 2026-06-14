@@ -1,7 +1,47 @@
-import { Ticket } from '@/shadcn/types/tickets';
+import { Ticket, TicketState } from "@/shadcn/types/tickets";
 import { toast } from "../hooks/use-toast";
 
 export function useTicketActions(token: string, refetch: () => void) {
+  const updateTicketKanbanStatus = async (
+    ticket: Ticket,
+    state: TicketState,
+  ) => {
+    try {
+      const response = await fetch(`/api/v1/ticket/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: ticket.id,
+          detail: ticket.detail,
+          note: ticket.note,
+          title: ticket.title,
+          priority: ticket.priority,
+          stateId: state.id,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update ticket status");
+
+      toast({
+        title: "Status updated",
+        description: "The issue was moved successfully.",
+        duration: 3000,
+      });
+
+      refetch();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to move issue",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   const updateTicketStatus = async (ticket: Ticket) => {
     try {
       const response = await fetch(`/api/v1/ticket/status/update`, {
@@ -10,17 +50,20 @@ export function useTicketActions(token: string, refetch: () => void) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: ticket.id, status: !ticket.isComplete }),
+        body: JSON.stringify({
+          id: ticket.id,
+          status: !ticket.state?.isResolved,
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to update status');
+      if (!response.ok) throw new Error("Failed to update status");
 
       toast({
-        title: ticket.isComplete ? "Issue re-opened" : "Issue closed",
+        title: ticket.state?.isResolved ? "Issue re-opened" : "Issue closed",
         description: "The status of the issue has been updated.",
         duration: 3000,
       });
-      
+
       refetch();
     } catch (error) {
       toast({
@@ -78,7 +121,7 @@ export function useTicketActions(token: string, refetch: () => void) {
           note: ticket.note,
           title: ticket.title,
           priority: priority,
-          status: ticket.status,
+          stateId: ticket.stateId,
         }),
       });
 
@@ -131,8 +174,9 @@ export function useTicketActions(token: string, refetch: () => void) {
 
   return {
     updateTicketStatus,
+    updateTicketKanbanStatus,
     updateTicketAssignee,
     updateTicketPriority,
-    deleteTicket
+    deleteTicket,
   };
 }

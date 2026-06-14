@@ -152,7 +152,7 @@ export default function Home() {
                                 )}
                               </td>
                               <td className="hidden px-3 py-1 text-sm text-gray-500 sm:table-cell w-[64px]">
-                                {item.isComplete === true ? (
+                                {item.state?.isResolved ? (
                                   <div>
                                     <span className="inline-flex items-center gap-x-1.5 rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
                                       <svg
@@ -367,8 +367,6 @@ export default function Home() {
           </>
         )}
       </div>
-      
-      
     </div>
   );
 }

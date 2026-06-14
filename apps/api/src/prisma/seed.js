@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   const setup = await prisma.config.findFirst({});
   const templates = await prisma.emailTemplate.findMany({});
+  const states = await prisma.ticketState.findMany({});
 
   if (setup === null) {
     await prisma.user.upsert({
@@ -53,6 +54,48 @@ async function main() {
     });
   } else {
     console.log("No need to seed, already seeded");
+  }
+
+  if (states.length === 0) {
+    await prisma.ticketState.createMany({
+      data: [
+        {
+          name: "Needs Support",
+          slug: "needs_support",
+          color: "bg-yellow-500",
+          order: 0,
+          isResolved: false,
+        },
+        {
+          name: "In Progress",
+          slug: "in_progress",
+          color: "bg-blue-500",
+          order: 1,
+          isResolved: false,
+        },
+        {
+          name: "In Review",
+          slug: "in_review",
+          color: "bg-purple-500",
+          order: 2,
+          isResolved: false,
+        },
+        {
+          name: "On Hold",
+          slug: "hold",
+          color: "bg-orange-500",
+          order: 3,
+          isResolved: false,
+        },
+        {
+          name: "Done",
+          slug: "done",
+          color: "bg-green-500",
+          order: 4,
+          isResolved: true,
+        },
+      ],
+    });
   }
 
   if (templates.length === 0) {

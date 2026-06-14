@@ -28,14 +28,14 @@ export default function Tickets() {
 
   const token = getCookie("session");
   const user = useUser();
-  
+
   // Fetch tickets data
   const { data, status, refetch } = useQuery(
     "allusertickets",
     () => getUserTickets(token),
     {
       refetchInterval: 5000,
-    }
+    },
   );
 
   // Custom hooks for managing state
@@ -47,7 +47,7 @@ export default function Tickets() {
     handleStatusToggle,
     handleAssigneeToggle,
     clearFilters,
-    filteredTickets
+    filteredTickets,
   } = useTicketFilters(data?.tickets);
 
   const {
@@ -65,28 +65,36 @@ export default function Tickets() {
 
   const {
     updateTicketStatus,
+    updateTicketKanbanStatus,
     updateTicketAssignee,
     updateTicketPriority,
-    deleteTicket
+    deleteTicket,
   } = useTicketActions(token, refetch);
 
   // Update local storage when filters change
   useEffect(() => {
     localStorage.setItem(
       "all_selectedPriorities",
-      JSON.stringify(selectedPriorities)
+      JSON.stringify(selectedPriorities),
     );
     localStorage.setItem(
       "all_selectedStatuses",
-      JSON.stringify(selectedStatuses)
+      JSON.stringify(selectedStatuses),
     );
     localStorage.setItem(
       "all_selectedAssignees",
-      JSON.stringify(selectedAssignees)
+      JSON.stringify(selectedAssignees),
     );
   }, [selectedPriorities, selectedStatuses, selectedAssignees]);
 
   const [users, setUsers] = useState<any[]>([]);
+  const statusOptions: string[] = Array.from(
+    new Set(
+      (data?.tickets || [])
+        .map((ticket) => ticket.state?.name)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  );
 
   async function fetchUsers() {
     await fetch(`/api/v1/users/all`, {
@@ -125,6 +133,7 @@ export default function Tickets() {
         <TicketFilters
           selectedPriorities={selectedPriorities}
           selectedStatuses={selectedStatuses}
+          statusOptions={statusOptions}
           selectedAssignees={selectedAssignees}
           users={users}
           onPriorityToggle={handlePriorityToggle}
@@ -132,7 +141,7 @@ export default function Tickets() {
           onAssigneeToggle={handleAssigneeToggle}
           onClearFilters={clearFilters}
         />
-        
+
         <ViewSettings
           viewMode={viewMode}
           kanbanGrouping={kanbanGrouping}
@@ -144,6 +153,12 @@ export default function Tickets() {
           onUISettingChange={handleUISettingChange}
         />
       </div>
+
+      {viewMode === "kanban" && kanbanGrouping !== "status" && (
+        <div className="px-4 py-2 text-xs text-muted-foreground border-b bg-background">
+          Drag and drop is available when grouping by status.
+        </div>
+      )}
 
       {viewMode === "list" ? (
         <TicketList
@@ -157,9 +172,10 @@ export default function Tickets() {
           uiSettings={uiSettings}
         />
       ) : (
-        <TicketKanban 
-          columns={kanbanColumns} 
+        <TicketKanban
+          columns={kanbanColumns}
           uiSettings={uiSettings}
+          onStatusChange={updateTicketKanbanStatus}
         />
       )}
     </div>

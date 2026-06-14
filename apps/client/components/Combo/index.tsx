@@ -19,6 +19,12 @@ type Status = {
   icon: LucideIcon;
 };
 
+type BasicOption = {
+  value: string;
+  name: string;
+  icon?: LucideIcon;
+};
+
 export function UserCombo({
   value,
   update,
@@ -129,6 +135,7 @@ export function IconCombo({
   defaultName,
   hideInitial,
   disabled,
+  renderLabel,
 }) {
   const [open, setOpen] = React.useState(false);
   const [selectedStatus, setSelectedStatus] = React.useState<any | null>(null);
@@ -158,7 +165,9 @@ export function IconCombo({
                   </div>
                 )}
                 <span className="mt-[2.5px] capitalize">
-                  {selectedStatus.value}
+                  {renderLabel
+                    ? renderLabel(selectedStatus)
+                    : selectedStatus.value}
                 </span>
               </div>
             ) : defaultName ? (
@@ -172,7 +181,11 @@ export function IconCombo({
                     </span>
                   </span>
                 </div>
-                <span className="mt-[2.5px] capitalize">{defaultName}</span>
+                <span className="mt-[2.5px] capitalize">
+                  {renderLabel && defaultIcon
+                    ? renderLabel(defaultIcon)
+                    : defaultName}
+                </span>
               </div>
             ) : (
               <span>unassigned</span>
@@ -191,9 +204,9 @@ export function IconCombo({
                     key={val.value}
                     value={val}
                     onSelect={(selected) => {
-                      const user = value.find((k) => k.name === selected);
-                      setSelectedStatus(user);
-                      update(user);
+                      const option = value.find((k) => k.name === selected);
+                      setSelectedStatus(option);
+                      update(option);
                       setOpen(false);
                     }}
                   >
@@ -202,10 +215,10 @@ export function IconCombo({
                         "mr-2 h-4 w-4",
                         val.value === selectedStatus?.value
                           ? "opacity-100"
-                          : "opacity-40"
+                          : "opacity-40",
                       )}
                     />
-                    <span>{val.name}</span>
+                    <span>{renderLabel ? renderLabel(val) : val.name}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -214,6 +227,29 @@ export function IconCombo({
         </PopoverContent>
       </Popover>
     </div>
+  );
+}
+
+export function StateCombo({
+  value,
+  update,
+  defaultName,
+  disabled,
+}: {
+  value: BasicOption[];
+  update: (option: BasicOption) => void;
+  defaultName?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <IconCombo
+      value={value}
+      update={update}
+      defaultName={defaultName}
+      disabled={disabled}
+      hideInitial={false}
+      renderLabel={(option) => option.name}
+    />
   );
 }
 

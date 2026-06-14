@@ -1,31 +1,40 @@
-import { KanbanGrouping, SortOption, Ticket, UISettings, ViewMode } from '@/shadcn/types/tickets';
-import { useEffect, useState } from 'react';
+import {
+  KanbanColumn,
+  KanbanGrouping,
+  SortOption,
+  Ticket,
+  UISettings,
+  ViewMode,
+} from "@/shadcn/types/tickets";
+import { useEffect, useState } from "react";
 
 export function useTicketView(tickets: Ticket[] = []) {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem("preferred_view_mode");
-    return (saved as ViewMode) || 'list';
+    return (saved as ViewMode) || "list";
   });
 
   const [kanbanGrouping, setKanbanGrouping] = useState<KanbanGrouping>(() => {
     const saved = localStorage.getItem("preferred_kanban_grouping");
-    return (saved as KanbanGrouping) || 'status';
+    return (saved as KanbanGrouping) || "status";
   });
 
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("preferred_sort_by");
-    return (saved as SortOption) || 'newest';
+    return (saved as SortOption) || "newest";
   });
 
   const [uiSettings, setUISettings] = useState<UISettings>(() => {
     const saved = localStorage.getItem("preferred_ui_settings");
-    return saved ? JSON.parse(saved) : {
-      showAvatars: true,
-      showDates: true,
-      showPriority: true,
-      showType: true,
-      showTicketNumbers: true,
-    };
+    return saved
+      ? JSON.parse(saved)
+      : {
+          showAvatars: true,
+          showDates: true,
+          showPriority: true,
+          showType: true,
+          showTicketNumbers: true,
+        };
   });
 
   useEffect(() => {
@@ -36,22 +45,29 @@ export function useTicketView(tickets: Ticket[] = []) {
   }, [viewMode, kanbanGrouping, sortBy, uiSettings]);
 
   const handleUISettingChange = (setting: keyof UISettings, value: boolean) => {
-    setUISettings(prev => ({
+    setUISettings((prev) => ({
       ...prev,
-      [setting]: value
+      [setting]: value,
     }));
   };
 
   const sortedTickets = [...tickets].sort((a, b) => {
     switch (sortBy) {
-      case 'newest':
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      case 'oldest':
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      case 'priority':
+      case "newest":
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case "oldest":
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      case "priority":
         const priorityOrder = { high: 0, normal: 1, low: 2 };
-        return priorityOrder[a.priority.toLowerCase()] - priorityOrder[b.priority.toLowerCase()];
-      case 'title':
+        return (
+          priorityOrder[a.priority.toLowerCase()] -
+          priorityOrder[b.priority.toLowerCase()]
+        );
+      case "title":
         return a.title.localeCompare(b.title);
       default:
         return 0;
@@ -60,83 +76,86 @@ export function useTicketView(tickets: Ticket[] = []) {
 
   const kanbanColumns = (() => {
     switch (kanbanGrouping) {
-      case 'status':
+      case "status":
+        return sortedTickets
+          .reduce((columns, ticket) => {
+            const state = ticket.state;
+            if (!state) return columns;
+
+            const existing = columns.find((column) => column.id === state.slug);
+            if (existing) {
+              existing.tickets.push(ticket);
+              return columns;
+            }
+
+            columns.push({
+              id: state.slug,
+              title: state.name,
+              color: state.color || "bg-gray-500",
+              tickets: [ticket],
+              droppable: true,
+              order: state.order,
+              state,
+            });
+
+            return columns;
+          }, [] as KanbanColumn[])
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+          .map(({ order, ...column }) => column);
+      case "priority":
         return [
           {
-            id: 'needs_support',
-            title: 'Needs Support',
-            color: 'bg-yellow-500',
-            tickets: sortedTickets.filter(t => t.status === 'needs_support'),
+            id: "high",
+            title: "High",
+            color: "bg-red-500",
+            tickets: sortedTickets.filter(
+              (t) => t.priority.toLowerCase() === "high",
+            ),
           },
           {
-            id: 'in_progress',
-            title: 'In Progress',
-            color: 'bg-blue-500',
-            tickets: sortedTickets.filter(t => t.status === 'in_progress'),
+            id: "normal",
+            title: "Normal",
+            color: "bg-green-500",
+            tickets: sortedTickets.filter(
+              (t) => t.priority.toLowerCase() === "normal",
+            ),
           },
           {
-            id: 'in_review',
-            title: 'In Review',
-            color: 'bg-purple-500',
-            tickets: sortedTickets.filter(t => t.status === 'in_review'),
-          },
-          {
-            id: 'hold',
-            title: 'On Hold',
-            color: 'bg-orange-500',
-            tickets: sortedTickets.filter(t => t.status === 'hold'),
-          },
-          {
-            id: 'done',
-            title: 'Done',
-            color: 'bg-green-500',
-            tickets: sortedTickets.filter(t => t.status === 'done'),
+            id: "low",
+            title: "Low",
+            color: "bg-blue-500",
+            tickets: sortedTickets.filter(
+              (t) => t.priority.toLowerCase() === "low",
+            ),
           },
         ];
-      case 'priority':
+      case "type":
         return [
           {
-            id: 'high',
-            title: 'High',
-            color: 'bg-red-500',
-            tickets: sortedTickets.filter(t => t.priority.toLowerCase() === 'high'),
+            id: "bug",
+            title: "Bug",
+            color: "bg-red-500",
+            tickets: sortedTickets.filter((t) => t.type === "bug"),
           },
           {
-            id: 'normal',
-            title: 'Normal',
-            color: 'bg-green-500',
-            tickets: sortedTickets.filter(t => t.priority.toLowerCase() === 'normal'),
-          },
-          {
-            id: 'low',
-            title: 'Low',
-            color: 'bg-blue-500',
-            tickets: sortedTickets.filter(t => t.priority.toLowerCase() === 'low'),
-          },
-        ];
-      case 'type':
-        return [
-          {
-            id: 'bug',
-            title: 'Bug',
-            color: 'bg-red-500',
-            tickets: sortedTickets.filter(t => t.type === 'bug'),
-          },
-          {
-            id: 'feature',
-            title: 'Feature',
-            color: 'bg-blue-500',
-            tickets: sortedTickets.filter(t => t.type === 'feature'),
+            id: "feature",
+            title: "Feature",
+            color: "bg-blue-500",
+            tickets: sortedTickets.filter((t) => t.type === "feature"),
           },
           // Add other type columns as needed
         ];
-      case 'assignee':
-        const assignees = Array.from(new Set(sortedTickets.map(t => t.assignedTo?.name || 'Unassigned')));
-        return assignees.map(assignee => ({
+      case "assignee":
+        const assignees = Array.from(
+          new Set(sortedTickets.map((t) => t.assignedTo?.name || "Unassigned")),
+        );
+        return assignees.map((assignee) => ({
           id: assignee.toLowerCase(),
           title: assignee,
-          color: 'bg-teal-500',
-          tickets: sortedTickets.filter(t => (t.assignedTo?.name || 'Unassigned') === assignee),
+          color: "bg-teal-500",
+          tickets: sortedTickets.filter(
+            (t) => (t.assignedTo?.name || "Unassigned") === assignee,
+          ),
         }));
       default:
         return [];

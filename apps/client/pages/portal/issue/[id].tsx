@@ -66,7 +66,7 @@ export default function Ticket() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        status: !data.ticket.isComplete,
+        status: !data.ticket.state?.isResolved,
         id,
       }),
     })
@@ -136,7 +136,7 @@ export default function Ticket() {
                 </div>
                 <aside className="mt-4 xl:hidden">
                   <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0 ">
-                    {!data.ticket.isComplete ? (
+                    {!data.ticket.state?.isResolved ? (
                       <div className="flex items-center space-x-2">
                         <LockOpenIcon
                           className="h-5 w-5 text-green-500"
@@ -187,8 +187,8 @@ export default function Ticket() {
                                   {data.ticket.assignedTo
                                     ? data.ticket.assignedTo.name
                                     : n
-                                    ? n.name
-                                    : t("select_new_user")}
+                                      ? n.name
+                                      : t("select_new_user")}
                                 </span>
                               </Listbox.Button>
 
@@ -208,7 +208,7 @@ export default function Ticket() {
                                           active
                                             ? "text-white bg-indigo-600"
                                             : "text-gray-900",
-                                          "cursor-default select-none relative py-2 pl-3 pr-9"
+                                          "cursor-default select-none relative py-2 pl-3 pr-9",
                                         )
                                       }
                                       value={user}
@@ -220,7 +220,7 @@ export default function Ticket() {
                                               n
                                                 ? "font-semibold"
                                                 : "font-normal",
-                                              "block truncate"
+                                              "block truncate",
                                             )}
                                           >
                                             {user.name}
@@ -232,7 +232,7 @@ export default function Ticket() {
                                                 active
                                                   ? "text-white"
                                                   : "text-indigo-600",
-                                                "absolute inset-y-0 right-0 flex items-center pr-4"
+                                                "absolute inset-y-0 right-0 flex items-center pr-4",
                                               )}
                                             >
                                               <CheckIcon
@@ -309,7 +309,7 @@ export default function Ticket() {
                             </div>
                           </li>
                         )}
-                        {data.ticket.status && (
+                        {data.ticket.state && (
                           <li className="inline">
                             <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                               <div className="absolute flex flex-shrink-0 items-center justify-center">
@@ -319,18 +319,7 @@ export default function Ticket() {
                                 />
                               </div>
                               <div className="ml-3 text-xs font-semibold text-gray-900">
-                                {data.ticket.status === "needs_support" && (
-                                  <span>Needs Support</span>
-                                )}
-                                {data.ticket.status === "in_progress" && (
-                                  <span>In Progress</span>
-                                )}
-                                {data.ticket.status === "in_review" && (
-                                  <span>In Review</span>
-                                )}
-                                {data.ticket.status === "done" && (
-                                  <span>Done</span>
-                                )}
+                                <span>{data.ticket.state.name}</span>
                               </div>
                             </div>
                           </li>
@@ -416,7 +405,7 @@ export default function Ticket() {
 
                                             <span className="text-xs text-gray-500 dark:text-white">
                                               {moment(item.createdAt).format(
-                                                "DD/MM/YYYY hh:mm"
+                                                "DD/MM/YYYY hh:mm",
                                               )}
                                             </span>
                                           </div>
@@ -428,7 +417,7 @@ export default function Ticket() {
                                     </div>
                                   </div>
                                 </li>
-                              )
+                              ),
                             )}
                         </ul>
                       </div>
@@ -451,7 +440,7 @@ export default function Ticket() {
                                 />
                               </div>
                               <div className="mt-4 flex items-center justify-end space-x-4">
-                                {data.ticket.isComplete ? (
+                                {data.ticket.state?.isResolved ? (
                                   <button
                                     type="button"
                                     onClick={() => updateStatus()}
@@ -498,7 +487,7 @@ export default function Ticket() {
             <div className="hidden xl:block xl:pl-8 xl:order-2 order-1">
               <h2 className="sr-only">{t("details")}</h2>
               <div className="space-y-5">
-                {!data.ticket.isComplete ? (
+                {!data.ticket.state?.isResolved ? (
                   <div className="flex items-center space-x-2">
                     <LockOpenIcon
                       className="h-5 w-5 text-green-500"

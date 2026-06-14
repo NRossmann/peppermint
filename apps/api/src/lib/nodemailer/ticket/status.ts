@@ -4,6 +4,11 @@ import { createTransportProvider } from "../transport";
 
 export async function sendTicketStatus(ticket: any) {
   const email = await prisma.email.findFirst();
+  const stateName = ticket.state?.name;
+
+  if (!stateName) {
+    return;
+  }
 
   if (email) {
     const transport = await createTransportProvider();
@@ -17,20 +22,16 @@ export async function sendTicketStatus(ticket: any) {
     var template = handlebars.compile(testhtml?.html);
     var replacements = {
       title: ticket.title,
-      status: ticket.isComplete ? "COMPLETED" : "OUTSTANDING",
+      status: stateName.toUpperCase(),
     };
     var htmlToSend = template(replacements);
 
     await transport
       .sendMail({
-        from: email?.reply, 
+        from: email?.reply,
         to: ticket.email,
-        subject: `Issue #${ticket.Number} status is now ${
-          ticket.isComplete ? "COMPLETED" : "OUTSTANDING"
-        }`, 
-        text: `Hello there, Issue #${ticket.Number}, now has a status of ${
-          ticket.isComplete ? "COMPLETED" : "OUTSTANDING"
-        }`,
+        subject: `Issue #${ticket.Number} status is now ${stateName.toUpperCase()}`,
+        text: `Hello there, Issue #${ticket.Number}, now has a status of ${stateName.toUpperCase()}`,
         html: htmlToSend,
       })
       .then((info: any) => {

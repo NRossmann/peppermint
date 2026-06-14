@@ -61,15 +61,7 @@ import {
   Unlock,
 } from "lucide-react";
 import { useUser } from "../../store/session";
-import { ClientCombo, IconCombo, UserCombo } from "../Combo";
-
-const ticketStatusMap = [
-  { id: 0, value: "hold", name: "Hold", icon: CircleDotDashed },
-  { id: 1, value: "needs_support", name: "Needs Support", icon: LifeBuoy },
-  { id: 2, value: "in_progress", name: "In Progress", icon: CircleDotDashed },
-  { id: 3, value: "in_review", name: "In Review", icon: Loader },
-  { id: 4, value: "done", name: "Done", icon: CircleCheck },
-];
+import { ClientCombo, IconCombo, StateCombo, UserCombo } from "../Combo";
 
 const priorityOptions = [
   {
@@ -139,6 +131,7 @@ export default function Ticket() {
 
   const [users, setUsers] = useState<any>();
   const [clients, setClients] = useState<any>();
+  const [states, setStates] = useState<any[]>([]);
   const [n, setN] = useState<any>();
 
   const [note, setNote] = useState<any>();
@@ -173,7 +166,7 @@ export default function Ticket() {
         note,
         title: debounceTitle,
         priority: priority?.value,
-        status: ticketStatus?.value,
+        stateId: ticketStatus?.id,
       }),
     }).then((res) => res.json());
 
@@ -198,7 +191,7 @@ export default function Ticket() {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        status: !data.ticket.isComplete,
+        status: !data.ticket.state?.isResolved,
         id,
       }),
     }).then((res) => res.json());
@@ -416,6 +409,20 @@ export default function Ticket() {
     }
   }
 
+  async function fetchStates() {
+    const res = await fetch(`/api/v1/ticket-states`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }).then((res) => res.json());
+
+    if (res.success) {
+      setStates(res.states || []);
+    }
+  }
+
   async function subscribe() {
     if (data && data.ticket && data.ticket.locked) return;
 
@@ -526,7 +533,7 @@ export default function Ticket() {
           {
             method: "POST",
             body: formData,
-          }
+          },
         );
 
         const data = await result.json();
@@ -554,6 +561,7 @@ export default function Ticket() {
   useEffect(() => {
     fetchUsers();
     fetchClients();
+    fetchStates();
   }, []);
 
   useEffect(() => {
@@ -594,7 +602,7 @@ export default function Ticket() {
 
   async function convertHTML() {
     const blocks = (await editor.tryParseHTMLToBlocks(
-      data.ticket.detail
+      data.ticket.detail,
     )) as PartialBlock[];
     editor.replaceBlocks(editor.document, blocks);
   }
@@ -638,12 +646,15 @@ export default function Ticket() {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: ticket.id, status: !ticket.isComplete }),
+      body: JSON.stringify({
+        id: ticket.id,
+        status: !ticket.state?.isResolved,
+      }),
     })
       .then((res) => res.json())
       .then(() => {
         toast({
-          title: ticket.isComplete ? "Issue re-opened" : "Issue closed",
+          title: ticket.state?.isResolved ? "Issue re-opened" : "Issue closed",
           description: "The status of the issue has been updated.",
           duration: 3000,
         });
@@ -698,7 +709,7 @@ export default function Ticket() {
           note: ticket.note,
           title: ticket.title,
           priority: priority,
-          status: ticket.status,
+          stateId: ticket.stateId,
         }),
       }).then((res) => res.json());
 
@@ -772,7 +783,7 @@ export default function Ticket() {
                             </div>
                           )}
                           <div>
-                            {!data.ticket.isComplete ? (
+                            {!data.ticket.state?.isResolved ? (
                               <div className="flex items-center space-x-2">
                                 <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                   {t("open_issue")}
@@ -899,16 +910,17 @@ export default function Ticket() {
                             hideInitial={false}
                           />
 
-                          <UserCombo
-                            value={ticketStatusMap}
+                          <StateCombo
+                            value={states.map((state) => ({
+                              id: state.id,
+                              value: state.slug,
+                              name: state.name,
+                            }))}
                             update={setTicketStatus}
                             defaultName={
-                              data.ticket.status ? data.ticket.status : ""
+                              data.ticket.state ? data.ticket.state.name : ""
                             }
                             disabled={data.ticket.locked}
-                            showIcon={true}
-                            placeholder="Change Client..."
-                            hideInitial={false}
                           />
                         </div>
                       </div>
@@ -992,7 +1004,7 @@ export default function Ticket() {
                                             (user) =>
                                               user.id === follower &&
                                               user.id !==
-                                                data.ticket.assignedTo.id
+                                                data.ticket.assignedTo.id,
                                           );
                                           console.log(userMatch);
                                           return userMatch ? (
@@ -1000,12 +1012,13 @@ export default function Ticket() {
                                               <span>{userMatch.name}</span>
                                             </div>
                                           ) : null;
-                                        }
+                                        },
                                       )}
 
                                       {data.ticket.following.filter(
                                         (follower: any) =>
-                                          follower !== data.ticket.assignedTo.id
+                                          follower !==
+                                          data.ticket.assignedTo.id,
                                       ).length === 0 && (
                                         <span className="text-xs">
                                           This issue has no followers
@@ -1028,7 +1041,7 @@ export default function Ticket() {
                               <span>created via email at </span>
                               <span className="font-bold">
                                 {moment(data.ticket.createdAt).format(
-                                  "DD/MM/YYYY"
+                                  "DD/MM/YYYY",
                                 )}
                               </span>
                             </>
@@ -1045,7 +1058,7 @@ export default function Ticket() {
                                   </span>
                                   <span className="">
                                     {moment(data.ticket.createdAt).format(
-                                      "LLL"
+                                      "LLL",
                                     )}
                                   </span>
                                   {data.ticket.name && (
@@ -1065,7 +1078,7 @@ export default function Ticket() {
                                   <span className="">
                                     <strong>
                                       {moment(data.ticket.createdAt).format(
-                                        "LLL"
+                                        "LLL",
                                       )}
                                     </strong>
                                     {data.ticket.client && (
@@ -1163,7 +1176,7 @@ export default function Ticket() {
                                 </div>
                               </div>
                               <div className="mt-4 flex items-center justify-end space-x-4">
-                                {data.ticket.isComplete ? (
+                                {data.ticket.state?.isResolved ? (
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -1255,12 +1268,17 @@ export default function Ticket() {
                       disabled={data.ticket.locked}
                       hideInitial={false}
                     />
-                    <IconCombo
-                      value={ticketStatusMap}
+                    <StateCombo
+                      value={states.map((state) => ({
+                        id: state.id,
+                        value: state.slug,
+                        name: state.name,
+                      }))}
                       update={setTicketStatus}
-                      defaultName={data.ticket.status ? data.ticket.status : ""}
+                      defaultName={
+                        data.ticket.state ? data.ticket.state.name : ""
+                      }
                       disabled={data.ticket.locked}
-                      hideInitial={false}
                     />
                     {clients && (
                       <ClientCombo
@@ -1385,7 +1403,7 @@ export default function Ticket() {
             <ContextMenuItem
               onClick={(e) => updateTicketStatus(e, data.ticket)}
             >
-              {data.ticket.isComplete ? "Re-open Issue" : "Close Issue"}
+              {data.ticket.state?.isResolved ? "Re-open Issue" : "Close Issue"}
             </ContextMenuItem>
             <ContextMenuSeparator />
 
@@ -1405,7 +1423,7 @@ export default function Ticket() {
                             "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                             data.ticket.assignedTo === null
                               ? "bg-primary text-primary-foreground"
-                              : "opacity-50 [&_svg]:invisible"
+                              : "opacity-50 [&_svg]:invisible",
                           )}
                         >
                           <CheckIcon className={cn("h-4 w-4")} />
@@ -1424,7 +1442,7 @@ export default function Ticket() {
                               "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                               data.ticket.assignedTo?.name === user.name
                                 ? "bg-primary text-primary-foreground"
-                                : "opacity-50 [&_svg]:invisible"
+                                : "opacity-50 [&_svg]:invisible",
                             )}
                           >
                             <CheckIcon className={cn("h-4 w-4")} />
@@ -1456,7 +1474,7 @@ export default function Ticket() {
                               "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
                               data.ticket.priority.toLowerCase() === priority
                                 ? "bg-primary text-primary-foreground"
-                                : "opacity-50 [&_svg]:invisible"
+                                : "opacity-50 [&_svg]:invisible",
                             )}
                           >
                             <CheckIcon className={cn("h-4 w-4")} />
@@ -1481,7 +1499,7 @@ export default function Ticket() {
                   duration: 3000,
                 });
                 navigator.clipboard.writeText(
-                  `${window.location.origin}/issue/${data.ticket.id}`
+                  `${window.location.origin}/issue/${data.ticket.id}`,
                 );
               }}
             >

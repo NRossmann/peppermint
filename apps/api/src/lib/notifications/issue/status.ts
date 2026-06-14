@@ -3,7 +3,7 @@ import { prisma } from "../../../prisma";
 export async function activeStatusNotification(
   ticket: any,
   updater: any,
-  newStatus: string
+  newStatus: boolean,
 ) {
   try {
     const text = `#${ticket.Number} status changed to ${
@@ -36,7 +36,7 @@ export async function activeStatusNotification(
 export async function statusUpdateNotification(
   ticket: any,
   updater: any,
-  newStatus: string
+  newStatus: string,
 ) {
   try {
     const text = `#${ticket.Number} status changed to ${newStatus} by ${updater.name}`;
