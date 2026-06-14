@@ -3,7 +3,6 @@ import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import { highlight, languages } from "prismjs";
 import "prismjs/components/prism-clike";
-import "prismjs/themes/prism.css";
 import { useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
 

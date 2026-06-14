@@ -8,7 +8,7 @@ export default function Login() {
   async function check() {
     if (router.query.code) {
       const sso = await fetch(
-        `/api/v1/auth/oauth/callback?code=${router.query.code}`
+        `/api/v1/auth/oauth/callback?code=${router.query.code}`,
       ).then((res) => res.json());
 
       if (!sso.success) {
@@ -20,7 +20,7 @@ export default function Login() {
   }
 
   function setandRedirect(token) {
-    setCookie("session", token, { maxAge: 60 * 6 * 24 });
+    setCookie("session", token);
     router.push("/onboarding");
   }
 

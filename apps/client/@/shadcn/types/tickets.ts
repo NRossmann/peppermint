@@ -1,6 +1,6 @@
-export type ViewMode = 'list' | 'kanban';
-export type KanbanGrouping = 'status' | 'priority' | 'type' | 'assignee';
-export type SortOption = 'newest' | 'oldest' | 'priority' | 'title';
+export type ViewMode = "list" | "kanban";
+export type KanbanGrouping = "status" | "priority" | "type" | "assignee";
+export type SortOption = "newest" | "oldest" | "priority" | "title";
 
 export type Team = {
   id: string;
@@ -16,6 +16,8 @@ export type Ticket = {
   id: string;
   Number: number;
   title: string;
+  detail?: string | null;
+  note?: string | null;
   priority: string;
   type: string;
   status: string;
@@ -38,4 +40,4 @@ export interface UISettings {
   showPriority: boolean;
   showType: boolean;
   showTicketNumbers: boolean;
-} 
+}

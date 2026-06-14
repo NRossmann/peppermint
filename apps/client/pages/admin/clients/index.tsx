@@ -2,6 +2,12 @@ import { getCookie } from "cookies-next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
+import type {
+  HTMLAttributes,
+  TableHTMLAttributes,
+  TdHTMLAttributes,
+  ThHTMLAttributes,
+} from "react";
 import { useQuery } from "react-query";
 import {
   useFilters,
@@ -52,7 +58,7 @@ function Table({ columns, data }: any) {
             : true;
         }),
     }),
-    []
+    [],
   );
 
   const defaultColumn = React.useMemo(
@@ -60,7 +66,7 @@ function Table({ columns, data }: any) {
       // Let's set up our default Filter UI
       Filter: DefaultColumnFilter,
     }),
-    []
+    [],
   );
 
   const {
@@ -100,27 +106,31 @@ function Table({ columns, data }: any) {
     },
     useFilters, // useFilters!
     useGlobalFilter,
-    usePagination
+    usePagination,
   );
+
+  const tableProps = getTableProps() as TableHTMLAttributes<HTMLTableElement>;
+  const tableBodyProps =
+    getTableBodyProps() as HTMLAttributes<HTMLTableSectionElement>;
 
   return (
     <div className="overflow-x-auto md:-mx-6 lg:-mx-8">
       <div className="py-2 align-middle inline-block min-w-full md:px-6 lg:px-8">
         <div className="shadow overflow-hidden border-b border-gray-200 md:rounded-lg">
           <table
-            {...getTableProps()}
+            {...tableProps}
             className="min-w-full divide-y divide-gray-200"
           >
             <thead className="bg-gray-50">
               {headerGroups.map((headerGroup: any) => (
                 <tr
-                  {...headerGroup.getHeaderGroupProps()}
+                  {...(headerGroup.getHeaderGroupProps() as HTMLAttributes<HTMLTableRowElement>)}
                   key={headerGroup.headers.map((header: any) => header.id)}
                 >
                   {headerGroup.headers.map((column: any) =>
                     column.hideHeader === false ? null : (
                       <th
-                        {...column.getHeaderProps()}
+                        {...(column.getHeaderProps() as ThHTMLAttributes<HTMLTableCellElement>)}
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         {column.render("Header")}
@@ -129,20 +139,23 @@ function Table({ columns, data }: any) {
                           {column.canFilter ? column.render("Filter") : null}
                         </div>
                       </th>
-                    )
+                    ),
                   )}
                 </tr>
               ))}
             </thead>
-            <tbody {...getTableBodyProps()}>
+            <tbody {...tableBodyProps}>
               {page.map((row: any, i: any) => {
                 prepareRow(row);
                 return (
-                  <tr {...row.getRowProps()} className="bg-white">
+                  <tr
+                    {...(row.getRowProps() as HTMLAttributes<HTMLTableRowElement>)}
+                    className="bg-white"
+                  >
                     {row.cells.map((cell: any) => (
                       <td
                         className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                        {...cell.getCellProps()}
+                        {...(cell.getCellProps() as TdHTMLAttributes<HTMLTableCellElement>)}
                       >
                         {cell.render("Cell")}
                       </td>
@@ -209,7 +222,7 @@ function Table({ columns, data }: any) {
 export default function Clients() {
   const { data, status, refetch } = useQuery(
     "fetchAllClients",
-    fetchAllClients
+    fetchAllClients,
   );
 
   const router = useRouter();
@@ -260,7 +273,7 @@ export default function Clients() {
         },
       },
     ],
-    []
+    [],
   );
 
   return (

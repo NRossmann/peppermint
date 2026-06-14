@@ -1,5 +1,8 @@
 //@ts-nocheck
 import "@radix-ui/themes/styles.css";
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
+import "prismjs/themes/prism.css";
 import "../styles/globals.css";
 
 import { ThemeProvider } from "next-themes";
@@ -37,7 +40,7 @@ function Auth({ children }: any) {
   const { loading, user } = useUser();
 
   React.useEffect(() => {
-    if (loading) return; 
+    if (loading) return;
   }, [user, loading]);
 
   if (user) {
@@ -145,7 +148,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: any) {
               <ShadLayout>
                 <Component {...pageProps} />
                 <Toaster />
-                </ShadLayout>
+              </ShadLayout>
             </Auth>
           </QueryClientProvider>
         </Theme>

@@ -1,31 +1,26 @@
-FROM node:lts AS builder
+FROM node:20 AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
 
 RUN apt-get update && \
-    apt-get install -y build-essential python3
+    apt-get install -y build-essential python3 make g++ pkg-config libssl-dev
 
-# Copy the package.json and package-lock.json files for both apps
-COPY apps/api/package*.json ./apps/api/
-COPY apps/client/package*.json ./apps/client/
+RUN corepack enable && corepack prepare yarn@4.2.2 --activate
+
+# Copy the full workspace before install so workspace postinstall scripts
+# (notably Prisma generate in apps/api) have access to their source files.
+COPY package.json yarn.lock turbo.json .yarnrc.yml ./
+COPY apps ./apps
+COPY packages ./packages
 COPY ./ecosystem.config.js ./ecosystem.config.js
 
-RUN npm i -g prisma
-RUN npm i -g typescript@latest -g --force 
+RUN yarn install --immutable
 
-# Copy the source code for both apps
-COPY apps/api ./apps/api
-COPY apps/client ./apps/client
+RUN yarn workspace api build
+RUN yarn workspace client build
 
-RUN cd apps/api && npm install --production
-RUN cd apps/api && npm i --save-dev @types/node && npm run build
-
-RUN cd apps/client && yarn install --production --ignore-scripts --prefer-offline --network-timeout 1000000
-RUN cd apps/client && yarn add --dev typescript @types/node --network-timeout 1000000
-RUN cd apps/client && yarn build
-
-FROM node:lts AS runner
+FROM node:20 AS runner
 
 COPY --from=builder /app/apps/api/ ./apps/api/
 COPY --from=builder /app/apps/client/.next/standalone ./apps/client
@@ -41,4 +36,3 @@ RUN npm install -g pm2
 
 # Start both apps using PM2
 CMD ["pm2-runtime", "ecosystem.config.js"]
-
