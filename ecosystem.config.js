@@ -27,6 +27,8 @@ module.exports = {
         DB_USERNAME: process.env.DB_USERNAME,
         DB_PASSWORD: process.env.DB_PASSWORD,
         DB_HOST: process.env.DB_HOST,
+        DATABASE_URL: `postgresql://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/peppermint`,
+        SECRET: process.env.SECRET,
         secret: process.env.SECRET,
       },
     },

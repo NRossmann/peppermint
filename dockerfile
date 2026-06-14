@@ -22,8 +22,11 @@ RUN yarn workspace client build
 
 FROM node:20 AS runner
 
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/api/ ./apps/api/
-COPY --from=builder /app/apps/client/.next/standalone ./apps/client
+COPY --from=builder /app/apps/client/.next/standalone ./
 COPY --from=builder /app/apps/client/.next/static ./apps/client/.next/static
 COPY --from=builder /app/apps/client/public ./apps/client/public
 COPY --from=builder /app/ecosystem.config.js ./ecosystem.config.js

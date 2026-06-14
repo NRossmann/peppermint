@@ -1,9 +1,7 @@
-version: "3.1"
-
 services:
   peppermint_postgres:
     container_name: peppermint_postgres
-    image: postgres:latest
+    image: postgres:16
     restart: always
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -25,7 +23,7 @@ services:
       DB_USERNAME: "peppermint"
       DB_PASSWORD: "1234"
       DB_HOST: "peppermint_postgres"
-      SECRET: 'peppermint4life'
-      
-volumes: 
- pgdata:
+      SECRET: "peppermint4life"
+
+volumes:
+  pgdata:
