@@ -161,35 +161,33 @@ export default function Tickets() {
 
   return (
     <div className="flex flex-col h-screen min-w-0 overflow-hidden">
-      <div className="sticky top-0 z-20 bg-background border-b-[1px] shrink-0">
-        <div className="py-2 px-3">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <TicketFilters
-                selectedPriorities={selectedPriorities}
-                selectedStatuses={selectedStatuses}
-                statusOptions={statusOptions}
-                selectedAssignees={selectedAssignees}
-                users={users}
-                onPriorityToggle={handlePriorityToggle}
-                onStatusToggle={handleStatusToggle}
-                onAssigneeToggle={handleAssigneeToggle}
-                onClearFilters={clearFilters}
-              />
-            </div>
+      <div className="sticky top-0 z-20 shrink-0 border-b-[1px] bg-background">
+        <div className="relative px-3 py-2 pr-14 sm:pr-16">
+          <div className="min-w-0">
+            <TicketFilters
+              selectedPriorities={selectedPriorities}
+              selectedStatuses={selectedStatuses}
+              statusOptions={statusOptions}
+              selectedAssignees={selectedAssignees}
+              users={users}
+              onPriorityToggle={handlePriorityToggle}
+              onStatusToggle={handleStatusToggle}
+              onAssigneeToggle={handleAssigneeToggle}
+              onClearFilters={clearFilters}
+            />
+          </div>
 
-            <div className="shrink-0 self-start ml-auto">
-              <ViewSettings
-                viewMode={viewMode}
-                kanbanGrouping={kanbanGrouping}
-                sortBy={sortBy}
-                uiSettings={uiSettings}
-                onViewModeChange={setViewMode}
-                onKanbanGroupingChange={setKanbanGrouping}
-                onSortChange={setSortBy}
-                onUISettingChange={handleUISettingChange}
-              />
-            </div>
+          <div className="absolute right-3 top-2 z-30">
+            <ViewSettings
+              viewMode={viewMode}
+              kanbanGrouping={kanbanGrouping}
+              sortBy={sortBy}
+              uiSettings={uiSettings}
+              onViewModeChange={setViewMode}
+              onKanbanGroupingChange={setKanbanGrouping}
+              onSortChange={setSortBy}
+              onUISettingChange={handleUISettingChange}
+            />
           </div>
         </div>
       </div>

@@ -34,16 +34,21 @@ export default function ViewSettings({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 whitespace-nowrap">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 whitespace-nowrap bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        >
           <Settings className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">Settings</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[240px] p-3"
+        className="w-[240px] max-w-[calc(100vw-1rem)] p-3"
         align="end"
-        side={viewMode === "kanban" ? "left" : "bottom"}
+        side="bottom"
         sideOffset={8}
+        collisionPadding={12}
       >
         <div className="space-y-4">
           <div>
