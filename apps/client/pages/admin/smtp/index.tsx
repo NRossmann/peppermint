@@ -172,8 +172,8 @@ export default function Notifications() {
   }, {} as Partial<Record<TemplateType, TemplateRecord>>);
 
   return (
-    <main className="flex-1">
-      <div className="relative max-w-4xl mx-auto md:px-8 xl:px-0">
+    <main className="flex-1 overflow-y-auto">
+      <div className="relative mx-auto max-w-4xl pb-10 md:px-8 xl:px-0">
         <div className="pt-10 pb-6">
           <div className="divide-y-2">
             <div className="px-4 sm:px-6 md:px-0 flex flex-row justify-between">

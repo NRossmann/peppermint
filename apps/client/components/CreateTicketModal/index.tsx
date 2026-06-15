@@ -45,43 +45,47 @@ export default function CreateTicketModal({ keypress, setKeyPressDown }) {
   const [issue, setIssue] = useState<any>();
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [options, setOptions] = useState<any>();
-  const [users, setUsers] = useState<any>();
+  const [options, setOptions] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(type[3]);
 
   const fetchClients = async () => {
-    await fetch(`/api/v1/clients/all`, {
+    const response = await fetch(`/api/v1/clients/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res) {
-          setOptions(res.clients);
-        }
-      });
+    });
+
+    if (!response.ok) {
+      setOptions([]);
+      return;
+    }
+
+    const res = await response.json();
+    setOptions(Array.isArray(res?.clients) ? res.clients : []);
   };
 
   async function fetchUsers() {
     try {
-      await fetch(`/api/v1/users/all`, {
+      const response = await fetch(`/api/v1/users/all`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-      })
-        .then((res) => res.json())
-        .then((res) => {
-          if (res) {
-            // TODO: THINK ABOUT AUTO ASSIGN PREFERENCES
-            // setEngineer(user)
-            setUsers(res.users);
-          }
-        });
+      });
+
+      if (!response.ok) {
+        setUsers([]);
+        return;
+      }
+
+      const res = await response.json();
+      // TODO: THINK ABOUT AUTO ASSIGN PREFERENCES
+      // setEngineer(user)
+      setUsers(Array.isArray(res?.users) ? res.users : []);
     } catch (error) {
       console.log(error);
     }

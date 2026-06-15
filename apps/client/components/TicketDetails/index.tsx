@@ -129,8 +129,8 @@ export default function Ticket() {
   const [assignedEdit, setAssignedEdit] = useState(false);
   const [labelEdit, setLabelEdit] = useState(false);
 
-  const [users, setUsers] = useState<any>();
-  const [clients, setClients] = useState<any>();
+  const [users, setUsers] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
   const [n, setN] = useState<any>();
 
@@ -362,13 +362,20 @@ export default function Ticket() {
   }
 
   async function fetchUsers() {
-    const res = await fetch(`/api/v1/users/all`, {
+    const response = await fetch(`/api/v1/users/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }).then((res) => res.json());
+    });
+
+    if (!response.ok) {
+      setUsers([]);
+      return;
+    }
+
+    const res = await response.json();
 
     if (!res.success) {
       toast({
@@ -385,13 +392,20 @@ export default function Ticket() {
   }
 
   async function fetchClients() {
-    const res = await fetch(`/api/v1/clients/all`, {
+    const response = await fetch(`/api/v1/clients/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }).then((res) => res.json());
+    });
+
+    if (!response.ok) {
+      setClients([]);
+      return;
+    }
+
+    const res = await response.json();
 
     if (!res.success) {
       toast({

@@ -12,7 +12,18 @@ export function userRoutes(fastify: FastifyInstance) {
   fastify.get(
     "/api/v1/users/all",
     {
-      preHandler: requirePermission(["user::read"]),
+      preHandler: requirePermission(
+        [
+          "issue::read",
+          "issue::assign",
+          "issue::transfer",
+          "role::read",
+          "role::create",
+          "role::update",
+          "role::manage",
+        ],
+        false,
+      ),
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const users = await prisma.user.findMany({

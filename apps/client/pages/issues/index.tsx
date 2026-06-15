@@ -112,19 +112,21 @@ export default function Tickets() {
   const statusOptions: string[] = states.map((state) => state.name);
 
   async function fetchUsers() {
-    await fetch(`/api/v1/users/all`, {
+    const response = await fetch(`/api/v1/users/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res) {
-          setUsers(res.users);
-        }
-      });
+    });
+
+    if (!response.ok) {
+      setUsers([]);
+      return;
+    }
+
+    const res = await response.json();
+    setUsers(Array.isArray(res?.users) ? res.users : []);
   }
 
   async function fetchStates() {

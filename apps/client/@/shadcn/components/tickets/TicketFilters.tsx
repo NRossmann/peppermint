@@ -18,7 +18,7 @@ interface TicketFiltersProps {
   selectedStatuses: string[];
   statusOptions: string[];
   selectedAssignees: string[];
-  users: any[];
+  users?: any[];
   onPriorityToggle: (priority: string) => void;
   onStatusToggle: (status: string) => void;
   onAssigneeToggle: (assignee: string) => void;
@@ -42,8 +42,11 @@ export default function TicketFilters({
   const [filterSearch, setFilterSearch] = useState("");
 
   const priorities = ["low", "normal", "high"];
-  const statuses = statusOptions;
-  const assignees = ["Unassigned", ...users.map((u) => u.name)];
+  const statuses = Array.isArray(statusOptions) ? statusOptions : [];
+  const assignees = [
+    "Unassigned",
+    ...(Array.isArray(users) ? users : []).map((u) => u.name),
+  ];
 
   const filteredPriorities = priorities.filter((priority) =>
     priority.toLowerCase().includes(filterSearch.toLowerCase()),

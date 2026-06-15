@@ -15,24 +15,26 @@ function classNames(...classes) {
 
 export default function TransferTicket({ id }) {
   const [open, setOpen] = useState(false);
-  const [users, setUsers] = useState();
+  const [users, setUsers] = useState([]);
   const [n, setN] = useState();
 
   const router = useRouter();
 
   const fetchUsers = async () => {
-    await fetch(`/api/v1/users/all`, {
+    const response = await fetch(`/api/v1/users/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res) {
-          setUsers(res.users);
-        }
-      });
+    });
+
+    if (!response.ok) {
+      setUsers([]);
+      return;
+    }
+
+    const res = await response.json();
+    setUsers(Array.isArray(res?.users) ? res.users : []);
   };
 
   async function postData() {
