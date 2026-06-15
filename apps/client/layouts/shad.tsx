@@ -37,11 +37,11 @@ export default function ShadLayout({ children }: any) {
       <div className="min-h-screen overflow-hidden">
         <SidebarProvider>
           <AppSidebar />
-          <div className="w-full">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             <div className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-x-4 border-b bg-background px-4 sm:gap-x-6">
               <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 items-center">
                 <SidebarTrigger title="[" />
-                <div className="sm:flex hidden w-full justify-start items-center space-x-6">
+                <div className="hidden min-w-0 flex-1 items-center justify-start space-x-6 sm:flex">
                   {user.isAdmin && (
                     <Link href="https://github.com/Peppermint-Lab/peppermint/releases">
                       <span className="inline-flex items-center rounded-md bg-green-700/10 px-3 py-2 text-xs font-medium text-green-600 ring-1 ring-inset ring-green-500/20">
@@ -53,7 +53,7 @@ export default function ShadLayout({ children }: any) {
                   <CommandMenu />
                 </div>
 
-                <div className="flex w-full sticky right-0 justify-end items-center gap-x-2 lg:gap-x-2 ">
+                <div className="flex shrink-0 items-center justify-end gap-x-2 lg:gap-x-2">
                   <Button
                     variant="outline"
                     className="relative rounded-md p-2 text-gray-400 hover:text-gray-500 hover:cursor-pointer focus:outline-none"
