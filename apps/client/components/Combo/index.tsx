@@ -155,7 +155,7 @@ export function IconCombo({
           >
             {selectedStatus ? (
               <div className="flex flex-row space-x-2 w-[120px]">
-                {!hideInitial && (
+                {!hideInitial && selectedStatus.icon && (
                   <div className="flex-shrink-0">
                     <span className="inline-flex h-6 w-6 pl-2.5 items-center justify-center ">
                       <span className="text-xs font-medium leading-none text-foreground uppercase ">
@@ -172,15 +172,15 @@ export function IconCombo({
               </div>
             ) : defaultName ? (
               <div className="flex flex-row space-x-2">
-                <div className="flex-shrink-0">
-                  <span className="inline-flex h-6 w-6 pl-2.5 items-center justify-center ">
-                    <span className="text-xs font-medium leading-none text-foreground uppercase ">
-                      {defaultIcon && (
+                {defaultIcon?.icon && (
+                  <div className="flex-shrink-0">
+                    <span className="inline-flex h-6 w-6 pl-2.5 items-center justify-center ">
+                      <span className="text-xs font-medium leading-none text-foreground uppercase ">
                         <defaultIcon.icon className="mr-2 h-4 w-4 shrink-0" />
-                      )}
+                      </span>
                     </span>
-                  </span>
-                </div>
+                  </div>
+                )}
                 <span className="mt-[2.5px] capitalize">
                   {renderLabel && defaultIcon
                     ? renderLabel(defaultIcon)
@@ -210,14 +210,16 @@ export function IconCombo({
                       setOpen(false);
                     }}
                   >
-                    <val.icon
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        val.value === selectedStatus?.value
-                          ? "opacity-100"
-                          : "opacity-40",
-                      )}
-                    />
+                    {val.icon && (
+                      <val.icon
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          val.value === selectedStatus?.value
+                            ? "opacity-100"
+                            : "opacity-40",
+                        )}
+                      />
+                    )}
                     <span>{renderLabel ? renderLabel(val) : val.name}</span>
                   </CommandItem>
                 ))}
