@@ -515,7 +515,9 @@ export default function NewLayout({ children }: any) {
           </div>
 
           {!loading && !user.external_user && (
-            <main className="bg-background min-h-screen">{children}</main>
+            <main className="min-h-screen min-w-0 max-w-full overflow-hidden bg-background">
+              {children}
+            </main>
           )}
         </div>
       </div>

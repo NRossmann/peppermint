@@ -7,10 +7,7 @@ import { AccountDropdown } from "../components/AccountDropdown";
 
 import { AppSidebar } from "@/shadcn/components/app-sidebar";
 import { CommandMenu } from "@/shadcn/components/command-menu";
-import {
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/shadcn/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/shadcn/ui/sidebar";
 import { Bell } from "lucide-react";
 import { useUser } from "../store/session";
 
@@ -18,7 +15,6 @@ export default function ShadLayout({ children }: any) {
   const location = useRouter();
 
   const { loading, user, fetchUserProfile } = useUser();
-
 
   const { t, lang } = useTranslation("peppermint");
 
@@ -65,7 +61,7 @@ export default function ShadLayout({ children }: any) {
                     <Link href="/notifications">
                       <Bell className="h-4 w-4 text-foreground" />
                       {user.notifcations.filter(
-                        (notification) => !notification.read
+                        (notification) => !notification.read,
                       ).length > 0 && (
                         <svg
                           className="h-2.5 w-2.5 absolute bottom-6 left-6 animate-pulse fill-green-500"
@@ -98,7 +94,9 @@ export default function ShadLayout({ children }: any) {
               </div>
             </div>
             {!loading && !user.external_user && (
-              <main className="bg-background min-h-screen">{children}</main>
+              <main className="min-h-screen min-w-0 max-w-full overflow-hidden bg-background">
+                {children}
+              </main>
             )}
           </div>
         </SidebarProvider>
