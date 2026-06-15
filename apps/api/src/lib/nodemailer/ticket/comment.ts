@@ -1,11 +1,25 @@
 import handlebars from "handlebars";
 import { prisma } from "../../../prisma";
 import { buildTicketTemplateContext } from "./templateContext";
+import {
+  getEmailTemplateSettings,
+  shouldSendTicketCommentEmail,
+} from "./settings";
 import { createTransportProvider } from "../transport";
 
 export async function sendComment(comment: string, ticket: any) {
   try {
     const provider = await prisma.email.findFirst();
+
+    if (!provider || !ticket?.email) {
+      return;
+    }
+
+    const settings = await getEmailTemplateSettings();
+
+    if (!shouldSendTicketCommentEmail(settings)) {
+      return;
+    }
 
     const transport = await createTransportProvider();
 
@@ -14,10 +28,6 @@ export async function sendComment(comment: string, ticket: any) {
         type: "ticket_comment",
       },
     });
-
-    if (!ticket?.email) {
-      return;
-    }
 
     var template = handlebars.compile(testhtml?.html || "");
     var replacements = buildTicketTemplateContext(ticket, {
@@ -30,7 +40,9 @@ export async function sendComment(comment: string, ticket: any) {
       .sendMail({
         from: provider?.reply,
         to: ticket.email,
-        subject: `New comment on Issue #${ticket.title} ref: #${ticket.Number || ticket.id}`,
+        subject: `New comment on Issue #${ticket.title} ref: #${
+          ticket.Number || ticket.id
+        }`,
         text: `Hello there, Issue #${ticket.title}, has had an update with a comment of ${comment}`,
         html: htmlToSend,
       })

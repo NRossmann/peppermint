@@ -1,13 +1,26 @@
 import handlebars from "handlebars";
 import { prisma } from "../../../prisma";
 import { buildTicketTemplateContext } from "./templateContext";
+import {
+  getEmailTemplateSettings,
+  shouldSendTicketCreatedEmail,
+} from "./settings";
 import { createTransportProvider } from "../transport";
 
-export async function sendTicketCreate(ticket: any) {
+export async function sendTicketCreate(
+  ticket: any,
+  source: "internal" | "public"
+) {
   try {
     const email = await prisma.email.findFirst();
 
-    if (email) {
+    if (email && ticket?.email) {
+      const settings = await getEmailTemplateSettings();
+
+      if (!shouldSendTicketCreatedEmail(settings, source)) {
+        return;
+      }
+
       const transport = await createTransportProvider();
 
       const testhtml = await prisma.emailTemplate.findFirst({

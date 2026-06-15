@@ -1,5 +1,10 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { track } from "../lib/hog";
+import {
+  buildNtfyUrl,
+  buildWebhookConfig,
+  serializeWebhookForClient,
+} from "../lib/notifications/webhook";
 import { requirePermission } from "../lib/roles";
 import { checkSession } from "../lib/session";
 import { prisma } from "../prisma";
@@ -13,14 +18,71 @@ export function webhookRoutes(fastify: FastifyInstance) {
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const user = await checkSession(request);
-      const { name, url, type, active, secret }: any = request.body;
+      const {
+        name,
+        url,
+        type,
+        active,
+        secret,
+        provider,
+        ntfyServerUrl,
+        ntfyTopic,
+        ntfyAuthType,
+        ntfyUsername,
+        ntfyPassword,
+        ntfyToken,
+      }: any = request.body;
+
+      if (provider === "ntfy") {
+        if (!ntfyServerUrl || !ntfyTopic) {
+          return reply.status(400).send({
+            success: false,
+            message: "ntfy server URL and topic are required.",
+          });
+        }
+
+        if (
+          ntfyAuthType === "basic" &&
+          (!ntfyUsername || !ntfyPassword)
+        ) {
+          return reply.status(400).send({
+            success: false,
+            message: "Username and password are required for ntfy basic auth.",
+          });
+        }
+
+        if (ntfyAuthType === "token" && !ntfyToken) {
+          return reply.status(400).send({
+            success: false,
+            message: "A token is required for ntfy token auth.",
+          });
+        }
+      } else if (!url) {
+        return reply.status(400).send({
+          success: false,
+          message: "A payload URL is required for generic webhooks.",
+        });
+      }
+
       await prisma.webhooks.create({
         data: {
           name,
-          url,
+          url:
+            provider === "ntfy"
+              ? buildNtfyUrl(ntfyServerUrl, ntfyTopic)
+              : url,
           type,
           active,
-          secret,
+          secret: buildWebhookConfig({
+            provider: provider === "ntfy" ? "ntfy" : "generic",
+            secret,
+            serverUrl: ntfyServerUrl,
+            topic: ntfyTopic,
+            authType: ntfyAuthType,
+            username: ntfyUsername,
+            password: ntfyPassword,
+            token: ntfyToken,
+          }),
           createdBy: user!.id,
         },
       });
@@ -47,7 +109,10 @@ export function webhookRoutes(fastify: FastifyInstance) {
     async (request: FastifyRequest, reply: FastifyReply) => {
       const webhooks = await prisma.webhooks.findMany({});
 
-      reply.status(200).send({ webhooks: webhooks, success: true });
+      reply.status(200).send({
+        webhooks: webhooks.map(serializeWebhookForClient),
+        success: true,
+      });
     }
   );
 

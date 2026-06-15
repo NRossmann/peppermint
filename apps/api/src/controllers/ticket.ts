@@ -1,6 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
-import axios from "axios";
 import { checkToken } from "../lib/jwt";
 
 //@ts-ignore
@@ -32,7 +31,7 @@ const validateEmail = (email: string) => {
   return String(email)
     .toLowerCase()
     .match(
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
 };
 
@@ -59,36 +58,20 @@ async function sendResolvedStatusWebhook(ticket: any, isResolved: boolean) {
   });
 
   for (let i = 0; i < webhook.length; i++) {
-    const url = webhook[i].url;
-
     if (webhook[i].active === true) {
       const s = isResolved ? "Completed" : "Outstanding";
-      if (url.includes("discord.com")) {
-        const message = {
-          content: `Ticket ${ticket.id} created by ${ticket.email}, has had it's status changed to ${s}`,
-          avatar_url:
-            "https://avatars.githubusercontent.com/u/76014454?s=200&v=4",
-          username: "Peppermint.sh",
-        };
-        axios
-          .post(url, message)
-          .then((response) => {
-            console.log("Message sent successfully!");
-            console.log("Discord API response:", response.data);
-          })
-          .catch((error) => {
-            console.error("Error sending message:", error);
-          });
-      } else {
-        await axios.post(`${webhook[i].url}`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            data: `Ticket ${ticket.id} created by ${ticket.email}, has had it's status changed to ${s}`,
-          }),
-        });
-      }
+      await sendWebhookNotification(webhook[i], {
+        event: "ticket_status_changed",
+        id: ticket.Number || ticket.id,
+        title: ticket.title,
+        priority: ticket.priority,
+        email: ticket.email,
+        name: ticket.name,
+        createdBy: ticket.createdBy,
+        assignedTo: ticket.assignedTo,
+        client: ticket.client,
+        status: s,
+      });
     }
   }
 }
@@ -158,8 +141,8 @@ export function ticketRoutes(fastify: FastifyInstance) {
         include: ticketInclude,
       });
 
-      if (!email && !validateEmail(email)) {
-        await sendTicketCreate(ticket);
+      if (email && validateEmail(email)) {
+        await sendTicketCreate(ticket, "internal");
       }
 
       if (engineer && engineer.name !== "Unassigned") {
@@ -169,7 +152,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           },
         });
 
-        await sendAssignedEmail(assgined!.email, ticket);
+        await sendAssignedEmail(assgined!.email, ticket, "create");
 
         await assignedNotification(engineer, ticket, user);
       }
@@ -184,7 +167,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         if (webhook[i].active === true) {
           const message = {
             event: "ticket_created",
-            id: ticket.id,
+            id: ticket.Number || ticket.id,
             title: ticket.title,
             priority: ticket.priority,
             email: ticket.email,
@@ -211,7 +194,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         id: ticket.id,
       });
-    },
+    }
   );
 
   fastify.post(
@@ -274,8 +257,8 @@ export function ticketRoutes(fastify: FastifyInstance) {
         include: ticketInclude,
       });
 
-      if (!email && !validateEmail(email)) {
-        await sendTicketCreate(ticket);
+      if (email && validateEmail(email)) {
+        await sendTicketCreate(ticket, "public");
       }
 
       if (engineer && engineer.name !== "Unassigned") {
@@ -285,7 +268,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           },
         });
 
-        await sendAssignedEmail(assgined!.email, ticket);
+        await sendAssignedEmail(assgined!.email, ticket, "create");
 
         const user = await checkSession(request);
 
@@ -302,7 +285,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         if (webhook[i].active === true) {
           const message = {
             event: "ticket_created",
-            id: ticket.id,
+            id: ticket.Number || ticket.id,
             title: ticket.title,
             priority: ticket.priority,
             email: ticket.email,
@@ -329,7 +312,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         id: ticket.id,
       });
-    },
+    }
   );
 
   // Get a ticket by id - requires auth
@@ -391,7 +374,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         ticket: t,
         sucess: true,
       });
-    },
+    }
   );
 
   // Get all tickets - requires auth
@@ -415,7 +398,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Basic Search - requires auth
@@ -440,7 +423,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         success: true,
       });
-    },
+    }
   );
 
   // Get all tickets (admin)
@@ -464,7 +447,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Get all open tickets for a user
@@ -487,7 +470,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Get all closed tickets
@@ -504,7 +487,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Get all unassigned tickets
@@ -525,7 +508,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         tickets: tickets.map(serializeTicket),
       });
-    },
+    }
   );
 
   // Update a ticket
@@ -586,20 +569,34 @@ export function ticketRoutes(fastify: FastifyInstance) {
         await statusUpdateNotification(issue, user, nextState.name);
       }
 
-      if (nextState && issue.state?.isResolved !== nextState.isResolved) {
-        await activeStatusNotification(
-          updatedIssue,
-          user,
-          nextState.isResolved,
-        );
-        await sendTicketStatus(updatedIssue);
-        await sendResolvedStatusWebhook(updatedIssue, nextState.isResolved);
+      if (nextState) {
+        const isStateChange = issue.state?.id !== nextState.id;
+        const isResolutionChange =
+          issue.state?.isResolved !== nextState.isResolved;
+
+        if (isResolutionChange) {
+          await activeStatusNotification(
+            updatedIssue,
+            user,
+            nextState.isResolved
+          );
+          await sendTicketStatus(updatedIssue, {
+            isResolutionChange,
+            isStateChange,
+          });
+          await sendResolvedStatusWebhook(updatedIssue, nextState.isResolved);
+        } else if (isStateChange) {
+          await sendTicketStatus(updatedIssue, {
+            isResolutionChange,
+            isStateChange,
+          });
+        }
       }
 
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Transfer a ticket to another user
@@ -632,7 +629,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           include: ticketInclude,
         });
 
-        await sendAssignedEmail(email, ticket);
+        await sendAssignedEmail(email, ticket, "transfer");
         await assignedNotification(assigned, ticket, assigner);
       } else {
         await prisma.ticket.update({
@@ -646,7 +643,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Transfer an Issue to another client
@@ -677,7 +674,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Link a ticket to another ticket
@@ -755,7 +752,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       //@ts-expect-error
       const { email } = ticket;
       if (public_comment && email) {
-        sendComment(text, ticket);
+        await sendComment(text, ticket);
       }
 
       await commentNotification(ticket, user);
@@ -770,7 +767,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   fastify.post(
@@ -790,7 +787,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Update ticket state
@@ -852,16 +849,30 @@ export function ticketRoutes(fastify: FastifyInstance) {
         await statusUpdateNotification(existingTicket, user, nextState.name);
       }
 
-      if (existingTicket.state?.isResolved !== nextState.isResolved) {
-        await activeStatusNotification(ticket, user, nextState.isResolved);
-        await sendTicketStatus(ticket);
-        await sendResolvedStatusWebhook(ticket, nextState.isResolved);
+      if (nextState) {
+        const isStateChange = existingTicket.state?.id !== nextState.id;
+        const isResolutionChange =
+          existingTicket.state?.isResolved !== nextState.isResolved;
+
+        if (isResolutionChange) {
+          await activeStatusNotification(ticket, user, nextState.isResolved);
+          await sendTicketStatus(ticket, {
+            isResolutionChange,
+            isStateChange,
+          });
+          await sendResolvedStatusWebhook(ticket, nextState.isResolved);
+        } else if (isStateChange) {
+          await sendTicketStatus(ticket, {
+            isResolutionChange,
+            isStateChange,
+          });
+        }
       }
 
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Hide a ticket
@@ -883,7 +894,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Lock a ticket
@@ -905,7 +916,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Delete a ticket
@@ -924,14 +935,14 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Get all tickets that created via imap
   fastify.get(
     "/api/v1/tickets/imap/all",
 
-    async (request: FastifyRequest, reply: FastifyReply) => {},
+    async (request: FastifyRequest, reply: FastifyReply) => {}
   );
 
   // GET all ticket templates
@@ -954,7 +965,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         templates: templates,
       });
-    },
+    }
   );
 
   // GET ticket template by ID
@@ -976,7 +987,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         success: true,
         template: template,
       });
-    },
+    }
   );
 
   // PUT ticket template by ID
@@ -1002,7 +1013,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
       reply.send({
         success: true,
       });
-    },
+    }
   );
 
   // Get all open tickets for an external user
@@ -1025,7 +1036,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Get all closed tickets for an external user
@@ -1048,7 +1059,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Get all tickets for an external user
@@ -1069,7 +1080,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         tickets: tickets.map(serializeTicket),
         sucess: true,
       });
-    },
+    }
   );
 
   // Subscribe to a ticket
@@ -1115,7 +1126,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           success: true,
         });
       }
-    },
+    }
   );
 
   // Unsubscribe from a ticket
@@ -1160,6 +1171,6 @@ export function ticketRoutes(fastify: FastifyInstance) {
           success: true,
         });
       }
-    },
+    }
   );
 }

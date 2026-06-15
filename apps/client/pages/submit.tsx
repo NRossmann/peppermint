@@ -88,11 +88,11 @@ export default function ClientTicketNew() {
   }
 
   return (
-    <div className="flex justify-center items-center content-center h-screen bg-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4 py-8">
       {view === "new" ? (
-        <div className="max-w-2xl bg-white p-12 rounded-md">
+        <div className="max-w-2xl rounded-md bg-white p-12 text-gray-900 shadow-md">
           <h1 className="font-bold text-2xl">Submit a Ticket</h1>
-          <span>
+          <span className="text-gray-600">
             Need help? Submit a ticket and our support team will get back to you
             as soon as possible.
           </span>

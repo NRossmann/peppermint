@@ -9,6 +9,10 @@ import { OAuth2Client } from "google-auth-library";
 const nodemailer = require("nodemailer");
 
 import { track } from "../lib/hog";
+import {
+  defaultEmailTemplateSettings,
+  normalizeEmailTemplateSettings,
+} from "../lib/nodemailer/ticket/settings";
 import { createTransportProvider } from "../lib/nodemailer/transport";
 import { isEffectiveAdmin, requirePermission } from "../lib/roles";
 import { checkSession } from "../lib/session";
@@ -22,6 +26,10 @@ async function tracking(event: string, properties: any) {
     properties: properties,
     distinctId: "uuid",
   });
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function configRoutes(fastify: FastifyInstance) {
@@ -47,7 +55,7 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         sso: sso_active,
       });
-    },
+    }
   );
 
   // Update OIDC Provider
@@ -97,7 +105,7 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "OIDC config Provider updated!",
       });
-    },
+    }
   );
 
   // Update Oauth Provider
@@ -159,7 +167,7 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "SSO Provider updated!",
       });
-    },
+    }
   );
 
   // Delete auth config
@@ -187,7 +195,7 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "SSO Provider deleted!",
       });
-    },
+    }
   );
 
   // Check if Emails are enabled & GET email settings
@@ -204,41 +212,63 @@ export function configRoutes(fastify: FastifyInstance) {
           port: true,
           reply: true,
           user: true,
+          serviceType: true,
+        },
+      });
+      const appConfig = await prisma.config.findFirst({
+        select: {
+          notifications: true,
         },
       });
 
       if (config && config?.active) {
-        const provider = await createTransportProvider();
+        const notificationSettings = isObject(appConfig?.notifications)
+          ? appConfig.notifications
+          : {};
+        const emailConfig = {
+          ...config,
+          templateSettings: normalizeEmailTemplateSettings(
+            notificationSettings.emailTemplates
+          ),
+        };
 
-        await new Promise((resolve, reject) => {
-          provider.verify(function (error: any, success: any) {
-            if (error) {
-              console.log("ERROR", error);
-              reply.send({
-                success: true,
-                active: true,
-                email: config,
-                verification: error,
-              });
-            } else {
-              console.log("SUCCESS", success);
-              console.log("Server is ready to take our messages");
-              reply.send({
-                success: true,
-                active: true,
-                email: config,
-                verification: success,
-              });
-            }
+        try {
+          const provider = await createTransportProvider();
+          const verification = await new Promise((resolve) => {
+            provider.verify((error: any, success: any) => {
+              if (error) {
+                resolve(error);
+                return;
+              }
+
+              resolve(success);
+            });
           });
-        });
+
+          return reply.send({
+            success: true,
+            active: true,
+            email: emailConfig,
+            verification,
+          });
+        } catch (error: any) {
+          return reply.send({
+            success: true,
+            active: true,
+            email: emailConfig,
+            verification: error,
+          });
+        }
       }
 
-      reply.send({
+      return reply.send({
         success: true,
         active: false,
+        email: {
+          templateSettings: defaultEmailTemplateSettings,
+        },
       });
-    },
+    }
   );
 
   // Update Email Provider Settings
@@ -301,7 +331,7 @@ export function configRoutes(fastify: FastifyInstance) {
           //@ts-expect-error
           email?.clientId,
           email?.clientSecret,
-          email?.redirectUri,
+          email?.redirectUri
         );
 
         const authorizeUrl = google.generateAuthUrl({
@@ -321,7 +351,46 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "SSO Provider updated!",
       });
-    },
+    }
+  );
+
+  fastify.patch(
+    "/api/v1/config/email/template-settings",
+
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { templateSettings }: any = request.body;
+      const email = await prisma.email.findFirst();
+      const config = await prisma.config.findFirst();
+
+      if (!email || !config) {
+        return reply.status(404).send({
+          success: false,
+          message:
+            "Configure SMTP settings before changing email template rules.",
+        });
+      }
+
+      const normalizedTemplateSettings =
+        normalizeEmailTemplateSettings(templateSettings);
+      const existingNotifications = isObject(config.notifications)
+        ? config.notifications
+        : {};
+
+      await prisma.config.update({
+        where: { id: config.id },
+        data: {
+          notifications: {
+            ...existingNotifications,
+            emailTemplates: normalizedTemplateSettings,
+          },
+        },
+      });
+
+      return reply.send({
+        success: true,
+        templateSettings: normalizedTemplateSettings,
+      });
+    }
   );
 
   // Google oauth callback
@@ -337,7 +406,7 @@ export function configRoutes(fastify: FastifyInstance) {
         //@ts-expect-error
         email?.clientId,
         email?.clientSecret,
-        email?.redirectUri,
+        email?.redirectUri
       );
 
       const r = await google.getToken(code);
@@ -372,7 +441,7 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "SSO Provider updated!",
       });
-    },
+    }
   );
 
   // Disable/Enable Email
@@ -386,7 +455,7 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "Email settings deleted!",
       });
-    },
+    }
   );
 
   // Toggle all roles
@@ -426,6 +495,6 @@ export function configRoutes(fastify: FastifyInstance) {
         success: true,
         message: "Roles updated!",
       });
-    },
+    }
   );
 }

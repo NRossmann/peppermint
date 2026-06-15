@@ -1,4 +1,8 @@
 import { toast } from "@/shadcn/hooks/use-toast";
+import {
+  emailTemplateMetadata,
+  TemplateType,
+} from "../../../../lib/emailTemplateSettings";
 import { getCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import { highlight, languages } from "prismjs";
@@ -6,34 +10,9 @@ import "prismjs/components/prism-clike";
 import { useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
 
-const sharedTicketVariables = [
-  "{{id}}",
-  "{{title}}",
-  "{{status}}",
-  "{{comment}}",
-  "{{ticket_url}}",
-  "{{assignedTo}}",
-  "{{ticket_priority}}",
-  "{{ticket_requester}}",
-];
-
-const templateVariables: Record<string, string[]> = {
-  ticket_created: sharedTicketVariables,
-  ticket_comment: sharedTicketVariables,
-  ticket_status_changed: sharedTicketVariables,
-  ticket_assigned: sharedTicketVariables,
-};
-
-const templateLabels: Record<string, string> = {
-  ticket_created: "Ticket created",
-  ticket_comment: "Ticket comment",
-  ticket_status_changed: "Ticket status changed",
-  ticket_assigned: "Ticket assigned",
-};
-
 export default function EmailTemplates() {
   const [template, setTemplate] = useState<any>();
-  const [templateType, setTemplateType] = useState<string>("");
+  const [templateType, setTemplateType] = useState<TemplateType | "">("");
 
   const router = useRouter();
 
@@ -79,8 +58,11 @@ export default function EmailTemplates() {
     fetchTemplate();
   }, []);
 
-  const availableVariables = templateVariables[templateType] || [];
-  const templateLabel = templateLabels[templateType] || "Email template";
+  const templateMetadata = templateType
+    ? emailTemplateMetadata[templateType]
+    : undefined;
+  const availableVariables = templateMetadata?.variables || [];
+  const templateLabel = templateMetadata?.label || "Email template";
 
   return (
     <div className="flex h-screen min-w-0 flex-col overflow-hidden">
@@ -89,7 +71,12 @@ export default function EmailTemplates() {
           <div className="min-w-0">
             <h1 className="text-xl font-semibold">{templateLabel}</h1>
             <p className="text-sm text-muted-foreground">
-              Edit the HTML email template and preview it side by side.
+              {templateMetadata?.description ||
+                "Edit the HTML email template and preview it side by side."}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Delivery rules for this template are configured on the SMTP Email
+              Settings page.
             </p>
           </div>
           <button
