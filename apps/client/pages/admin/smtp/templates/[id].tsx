@@ -151,7 +151,7 @@ export default function EmailTemplates() {
               <span className="text-sm font-medium">Preview</span>
             </div>
             <div className="min-w-0 overflow-auto p-4">
-              <div className="mx-auto max-w-3xl rounded-lg border bg-white p-4 shadow-sm">
+              <div className="mx-auto max-w-3xl rounded-lg border bg-white p-4 text-black shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-white">
                 <div dangerouslySetInnerHTML={{ __html: template }} />
               </div>
             </div>

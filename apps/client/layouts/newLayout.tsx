@@ -197,7 +197,7 @@ export default function NewLayout({ children }: any) {
                                   className={classNames(
                                     item.current
                                       ? "bg-secondary dark:bg-primary"
-                                      : "hover:bg-secondary dark:hover:bg-secondary-foreground dark:hover:text-gray-900 ",
+                                      : "hover:bg-secondary dark:hover:bg-gray-800 dark:hover:text-white",
                                     "group -mx-2 flex gap-x-3 p-1 text-xs rounded-md font-semibold leading-6",
                                   )}
                                 >
@@ -218,7 +218,7 @@ export default function NewLayout({ children }: any) {
                                   className={classNames(
                                     location.pathname === "/issues"
                                       ? "bg-secondary dark:bg-primary"
-                                      : " hover:bg-[#F0F3F9] dark:hover:bg-white dark:hover:text-gray-900 ",
+                                      : "hover:bg-[#F0F3F9] dark:hover:bg-gray-800 dark:hover:text-white",
                                     "group -mx-2 flex gap-x-3 p-1 rounded-md text-xs font-semibold leading-6",
                                   )}
                                 >
@@ -234,7 +234,7 @@ export default function NewLayout({ children }: any) {
                                   className={classNames(
                                     location.pathname === "/issues/open"
                                       ? "bg-secondary dark:bg-primary"
-                                      : " hover:bg-[#F0F3F9] dark:hover:bg-white dark:hover:text-gray-900 ",
+                                      : "hover:bg-[#F0F3F9] dark:hover:bg-gray-800 dark:hover:text-white",
                                     "group -mx-2 flex gap-x-3 p-1 pl-3 rounded-md text-xs font-semibold leading-6",
                                   )}
                                 >
@@ -250,7 +250,7 @@ export default function NewLayout({ children }: any) {
                                   className={classNames(
                                     location.pathname === "/issues/closed"
                                       ? "bg-secondary dark:bg-primary"
-                                      : " hover:bg-[#F0F3F9] dark:hover:bg-white dark:hover:text-gray-900 ",
+                                      : "hover:bg-[#F0F3F9] dark:hover:bg-gray-800 dark:hover:text-white",
                                     "group -mx-2 flex gap-x-3 p-1 pl-3 rounded-md text-xs font-semibold leading-6",
                                   )}
                                 >
@@ -267,7 +267,7 @@ export default function NewLayout({ children }: any) {
                                   className={classNames(
                                     location.pathname.includes("/admin")
                                       ? "bg-secondary dark:bg-primary"
-                                      : " hover:bg-[#F0F3F9] dark:hover:bg-white dark:hover:text-gray-900 ",
+                                      : "hover:bg-[#F0F3F9] dark:hover:bg-gray-800 dark:hover:text-white",
                                     "group -mx-2 flex gap-x-3 p-1 rounded-md text-xs font-semibold leading-6",
                                   )}
                                 >

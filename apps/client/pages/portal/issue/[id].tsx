@@ -182,7 +182,7 @@ export default function Ticket() {
                         {({ open }) => (
                           <>
                             <div className="relative">
-                              <Listbox.Button className="bg-white z-50 relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 px-4 py-1.5 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                              <Listbox.Button className="relative z-50 w-full rounded-md border border-gray-300 bg-white px-4 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white sm:text-sm">
                                 <span className="block min-w-[75px] text-xs">
                                   {data.ticket.assignedTo
                                     ? data.ticket.assignedTo.name
@@ -199,7 +199,7 @@ export default function Ticket() {
                                 leaveFrom="opacity-100"
                                 leaveTo="opacity-0"
                               >
-                                <Listbox.Options className="absolute z-50 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-950 dark:ring-white/10 sm:text-sm">
                                   {users.map((user: any) => (
                                     <Listbox.Option
                                       key={user.id}
@@ -207,7 +207,7 @@ export default function Ticket() {
                                         classNames(
                                           active
                                             ? "text-white bg-indigo-600"
-                                            : "text-gray-900",
+                                            : "text-gray-900 dark:text-white",
                                           "cursor-default select-none relative py-2 pl-3 pr-9",
                                         )
                                       }
@@ -253,27 +253,27 @@ export default function Ticket() {
                       </Listbox>
                     )}
                   </div>
-                  <div className="py-3 border-b border-gray-200">
-                    <div className="border-t border-gray-200">
+                  <div className="border-b border-gray-200 py-3 dark:border-gray-800">
+                    <div className="border-t border-gray-200 dark:border-gray-800">
                       <div className="flex flex-row items-center justify-between">
-                        <span className="text-sm font-medium text-gray-500 mt-2">
+                        <span className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-300">
                           {t("labels")}
                         </span>
-                        <span className="text-sm font-medium text-gray-500 mt-2">
+                        <span className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-300">
                           {t("edit-btn")}
                         </span>
                       </div>
                       <ul role="list" className="mt-2 leading-8 space-x-2">
                         {data.ticket.priority === "Low" && (
                           <li className="inline">
-                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:ring-gray-700 dark:hover:bg-gray-800">
                               <div className="absolute flex flex-shrink-0 items-center justify-center">
                                 <span
                                   className="h-1.5 w-1.5 rounded-full bg-blue-500"
                                   aria-hidden="true"
                                 />
                               </div>
-                              <div className="ml-3 text-xs font-semibold text-gray-900">
+                              <div className="ml-3 text-xs font-semibold text-gray-900 dark:text-white">
                                 {data.ticket.priority} {t("priority")}
                               </div>
                             </div>
@@ -281,14 +281,14 @@ export default function Ticket() {
                         )}
                         {data.ticket.priority === "Normal" && (
                           <li className="inline">
-                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:ring-gray-700 dark:hover:bg-gray-800">
                               <div className="absolute flex flex-shrink-0 items-center justify-center">
                                 <span
                                   className="h-1.5 w-1.5 rounded-full bg-green-500"
                                   aria-hidden="true"
                                 />
                               </div>
-                              <div className="ml-3 text-xs font-semibold text-gray-900">
+                              <div className="ml-3 text-xs font-semibold text-gray-900 dark:text-white">
                                 {data.ticket.priority} {t("priority")}
                               </div>
                             </div>
@@ -296,14 +296,14 @@ export default function Ticket() {
                         )}
                         {data.ticket.priority === "High" && (
                           <li className="inline">
-                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:ring-gray-700 dark:hover:bg-gray-800">
                               <div className="absolute flex flex-shrink-0 items-center justify-center">
                                 <span
                                   className="h-1.5 w-1.5 rounded-full bg-rose-500"
                                   aria-hidden="true"
                                 />
                               </div>
-                              <div className="ml-3 text-xs font-semibold text-gray-900">
+                              <div className="ml-3 text-xs font-semibold text-gray-900 dark:text-white">
                                 {data.ticket.priority} {t("priority")}
                               </div>
                             </div>
@@ -311,14 +311,14 @@ export default function Ticket() {
                         )}
                         {data.ticket.state && (
                           <li className="inline">
-                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            <div className="relative inline-flex items-center rounded-full px-2.5 py-1 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:ring-gray-700 dark:hover:bg-gray-800">
                               <div className="absolute flex flex-shrink-0 items-center justify-center">
                                 <span
                                   className="h-1.5 w-1.5 rounded-full bg-rose-500"
                                   aria-hidden="true"
                                 />
                               </div>
-                              <div className="ml-3 text-xs font-semibold text-gray-900">
+                              <div className="ml-3 text-xs font-semibold text-gray-900 dark:text-white">
                                 <span>{data.ticket.state.name}</span>
                               </div>
                             </div>
@@ -333,7 +333,7 @@ export default function Ticket() {
                   <div className="prose max-w-none">
                     <div className="">
                       {data.ticket.fromImap ? (
-                        <div className="break-words bg-white rounded-md p-4 text-black">
+                        <div className="break-words rounded-md bg-white p-4 text-black dark:bg-gray-950 dark:text-white">
                           <Frame
                             className="min-h-[60vh] h-full w-full"
                             initialContent={data.ticket.detail}
@@ -353,7 +353,7 @@ export default function Ticket() {
                 className="mt-8 xl:mt-10"
               >
                 <div>
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-gray-200 dark:divide-gray-800">
                     <div className="pb-2">
                       <span
                         id="activity-title"
@@ -374,7 +374,7 @@ export default function Ticket() {
                                     {itemIdx !==
                                     data.ticket.comments.length - 1 ? (
                                       <span
-                                        className="absolute left-3 top-5 -ml-px h-full w-0.5 bg-gray-200"
+                                        className="absolute left-3 top-5 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-800"
                                         aria-hidden="true"
                                       />
                                     ) : null}
@@ -433,7 +433,7 @@ export default function Ticket() {
                                   id="comment"
                                   name="comment"
                                   rows={3}
-                                  className="block w-full dark:bg-black rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-gray-900 sm:text-sm sm:leading-6"
+                                  className="block w-full rounded-md border-0 bg-white py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-gray-900 dark:bg-gray-950 dark:text-white dark:ring-gray-700 sm:text-sm sm:leading-6"
                                   placeholder="Leave a comment"
                                   defaultValue={""}
                                   onChange={(e) => setComment(e.target.value)}
@@ -444,7 +444,7 @@ export default function Ticket() {
                                   <button
                                     type="button"
                                     onClick={() => updateStatus()}
-                                    className="inline-flex justify-center items-center gap-x-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                    className="inline-flex items-center justify-center gap-x-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-950 dark:text-white dark:ring-gray-700 dark:hover:bg-gray-900"
                                   >
                                     <CheckCircleIcon
                                       className="-ml-0.5 h-5 w-5 text-red-500"
@@ -458,7 +458,7 @@ export default function Ticket() {
                                   <button
                                     type="button"
                                     onClick={() => updateStatus()}
-                                    className="inline-flex justify-center gap-x-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                    className="inline-flex justify-center gap-x-1.5 rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-950 dark:text-white dark:ring-gray-700 dark:hover:bg-gray-900"
                                   >
                                     <CheckCircleIcon
                                       className="-ml-0.5 h-5 w-5 text-green-500"
@@ -530,7 +530,7 @@ export default function Ticket() {
                   </span>
                 </div>
               </div>
-              <div className="mt-2 space-y-8 border-t border-gray-200 py-2">
+              <div className="mt-2 space-y-8 border-t border-gray-200 py-2 dark:border-gray-800">
                 <div>
                   <div className="flex flex-row justify-between items-center">
                     <span className="text-sm font-medium text-gray-500 dark:text-white">
@@ -556,14 +556,14 @@ export default function Ticket() {
                     </li>
                   </ul>
                 </div>
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-800">
                   <div className="flex flex-row items-center justify-between mt-2">
                     <span className="text-sm font-medium text-gray-500 dark:text-white">
                       {t("labels")}
                     </span>
                   </div>
                 </div>
-                <div className="border-t border-gray-200">
+                <div className="border-t border-gray-200 dark:border-gray-800">
                   <div className="flex flex-row items-center justify-between mt-2">
                     <span className="text-sm font-medium text-gray-500 dark:text-white">
                       Time Tracking

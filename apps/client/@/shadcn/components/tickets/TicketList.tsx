@@ -44,7 +44,7 @@ export default function TicketList({
           <ContextMenu key={ticket.id}>
             <ContextMenuTrigger>
               <Link href={`/issue/${ticket.id}`}>
-                <div className="flex flex-row w-full bg-white dark:bg-[#0A090C] dark:hover:bg-green-600 border-b-[1px] p-1.5 justify-between px-6 hover:bg-gray-100">
+                <div className="flex w-full flex-row justify-between border-b-[1px] bg-white p-1.5 px-6 hover:bg-gray-100 dark:bg-[#0A090C] dark:hover:bg-gray-900">
                   <div className="flex flex-row items-center space-x-4">
                     {uiSettings.showTicketNumbers && (
                       <span className="text-xs font-semibold">

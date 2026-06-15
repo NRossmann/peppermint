@@ -185,7 +185,7 @@ export default function AdminLayout({ children }: any) {
                                     className={classNames(
                                       item.current
                                         ? "bg-secondary dark:bg-primary"
-                                        : " hover:bg-[#F0F3F9] dark:hover:bg-white dark:hover:text-gray-900 ",
+                                        : "hover:bg-[#F0F3F9] dark:hover:bg-gray-800 dark:hover:text-white",
                                       "group -mx-2 flex gap-x-3 p-1 rounded-md text-xs font-semibold leading-6",
                                     )}
                                   >
@@ -233,7 +233,7 @@ export default function AdminLayout({ children }: any) {
                             className={classNames(
                               item.current
                                 ? "bg-secondary dark:bg-primary"
-                                : " hover:bg-[#F0F3F9] dark:hover:bg-white dark:hover:text-gray-900 ",
+                                : "hover:bg-[#F0F3F9] dark:hover:bg-gray-800 dark:hover:text-white",
                               "group -mx-2 flex gap-x-3 p-1 rounded-md text-xs font-semibold leading-6",
                             )}
                           >
