@@ -202,7 +202,7 @@ function TicketKanbanLane({
   return (
     <div
       ref={elementRef}
-      className="w-[320px] flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-lg flex flex-col max-h-[calc(100vh-8rem)]"
+      className="w-[320px] max-w-full flex-shrink-0 snap-start bg-gray-50 dark:bg-gray-800/50 rounded-lg flex flex-col max-h-[calc(100vh-8rem)]"
     >
       <div className="p-3 border-b dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -248,8 +248,8 @@ export default function TicketKanban({
   );
 
   return (
-    <div className="h-full w-full min-w-0 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <div className="inline-flex min-h-full min-w-full items-start gap-4 p-4 align-top">
+    <div className="h-full w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain px-4 py-4 [scrollbar-gutter:stable] touch-pan-x">
+      <div className="flex min-h-full min-w-full w-max snap-x snap-proximity items-start gap-4 align-top">
         {columns.map((column) => (
           <TicketKanbanLane
             key={column.id}
