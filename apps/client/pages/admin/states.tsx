@@ -169,7 +169,7 @@ export default function AdminStates() {
                 }))
               }
             />
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex items-center gap-2 text-sm text-foreground">
               <input
                 type="checkbox"
                 checked={draft.isResolved}
@@ -230,7 +230,7 @@ function StateRow({
   }, [state]);
 
   return (
-    <div className="grid gap-3 md:grid-cols-6 items-center border rounded-lg p-3">
+    <div className="grid items-center gap-3 rounded-lg border p-3 text-foreground md:grid-cols-6">
       <Input
         value={draft.name}
         onChange={(e) =>
@@ -256,7 +256,7 @@ function StateRow({
           setDraft((prev) => ({ ...prev, order: Number(e.target.value) || 0 }))
         }
       />
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
           checked={draft.isResolved}

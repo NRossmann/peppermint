@@ -84,7 +84,7 @@ export default function Roles() {
       <div className="flex justify-between mb-4">
         <div className="flex gap-2">
           <button
-            className="px-4 py-2 bg-green-500 text-white rounded"
+            className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-500"
             onClick={() => {
               router.push("/admin/roles/new");
             }}
@@ -92,13 +92,13 @@ export default function Roles() {
             Add Role
           </button>
           <button
-            className="px-4 py-2 bg-yellow-500 text-white rounded"
+            className="rounded bg-yellow-500 px-4 py-2 text-white hover:bg-yellow-400"
             onClick={() => handleToggleAllRoles(false)}
           >
             Disable All Roles
           </button>
           <button
-            className="px-4 py-2 bg-blue-500 text-white rounded"
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-500"
             onClick={() => handleToggleAllRoles(true)}
           >
             Enable All Roles
@@ -110,10 +110,10 @@ export default function Roles() {
           <CardHeader>
             <CardTitle>Roles</CardTitle>
             <span
-              className={`px-2 py-0.5 text-xs rounded ${
+              className={`rounded px-2 py-0.5 text-xs ${
                 isAllRolesActive
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
+                  ? "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-200"
+                  : "bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-200"
               }`}
             >
               {isAllRolesActive ? "Active" : "Inactive"}
@@ -125,18 +125,21 @@ export default function Roles() {
             ) : (
               <ul>
                 {roles.map((role) => (
-                  <li key={role.id} className="border-b py-2">
+                  <li
+                    key={role.id}
+                    className="border-b border-gray-200 py-2 dark:border-gray-800"
+                  >
                     <div className="flex justify-between items-center">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                           <strong>{role.name}</strong>
                           {role.isAdminRole && (
-                            <span className="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-800">
+                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs text-purple-800 dark:bg-purple-950/40 dark:text-purple-200">
                               Admin role
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-300">
                           ID: {role.id}
                         </span>
                       </div>
@@ -148,13 +151,13 @@ export default function Roles() {
                         {role.isActive ? 'Deactivate' : 'Activate'}
                       </button> */}
                         <button
-                          className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+                          className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-500"
                           onClick={() => router.push(`/admin/roles/${role.id}`)}
                         >
                           Edit
                         </button>
                         <button
-                          className="px-3 py-1 bg-red-500 text-white rounded text-sm"
+                          className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-500"
                           onClick={() => {
                             if (
                               window.confirm(

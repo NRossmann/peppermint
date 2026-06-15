@@ -89,85 +89,85 @@ export default function Notifications() {
                 Webhook Settings
               </h1>
             </div>
-           
           </div>
           <div className="px-4 sm:px-6 md:px-0">
             <div className="py-6">
               <div className="mt-4">
                 <div className={show === "main" ? "" : "hidden"}>
                   {status === "success" && (
-                     <>
-                     <div className="px-4 sm:px-6 md:px-0">
-                     <div className="sm:flex sm:items-center mt-4">
-                       <div className="sm:flex-auto">
-                         <p className="mt-2 text-sm text-foreground">
-                           Webhooks allow external services to be notified when certain
-                           events happen. When the specified events happen, we'll send
-                           a POST request to each of the URLs you provide.
-                         </p>
-                       </div>
-                       <div className="sm:ml-16 sm:flex-none">
-                         <>
-                           <button
-                             onClick={() => setShow("create")}
-                             type="button"
-                             className={
-                               show === "main"
-                                 ? "rounded bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                                 : "hidden"
-                             }
-                           >
-                             Add Webhook
-                           </button>
-                           <button
-                             onClick={() => setShow("main")}
-                             type="button"
-                             className={
-                               show === "main"
-                                 ? "hidden"
-                                 : "rounded bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                             }
-                           >
-                             Cancel
-                           </button>
-                         </>
-                       </div>
-                     </div>
-                   </div>
-                    <div className="mt-4">
-                      {data !== undefined && data.webhooks.length > 0 ? (
-                        <div className="flex flex-col gap-4">
-                          {data.webhooks.map((hook) => (
-                            <div
-                              key={hook.id}
-                              className="rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-foreground">
-                                  {hook.name}
-                                </p>
-                                <p className="text-sm text-foreground truncate">
-                                  {hook.url} | {hook.type}
-                                </p>
-                              </div>
-                              <div className="flex justify-end">
-                                <button
-                                  onClick={() => deleteHook(hook.id)}
-                                  type="button"
-                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                    <>
+                      <div className="px-4 sm:px-6 md:px-0">
+                        <div className="sm:flex sm:items-center mt-4">
+                          <div className="sm:flex-auto">
+                            <p className="mt-2 text-sm text-foreground">
+                              Webhooks allow external services to be notified
+                              when certain events happen. When the specified
+                              events happen, we'll send a POST request to each
+                              of the URLs you provide.
+                            </p>
+                          </div>
+                          <div className="sm:ml-16 sm:flex-none">
+                            <>
+                              <button
+                                onClick={() => setShow("create")}
+                                type="button"
+                                className={
+                                  show === "main"
+                                    ? "rounded bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-950 dark:text-white dark:ring-gray-700 dark:hover:bg-gray-900"
+                                    : "hidden"
+                                }
+                              >
+                                Add Webhook
+                              </button>
+                              <button
+                                onClick={() => setShow("main")}
+                                type="button"
+                                className={
+                                  show === "main"
+                                    ? "hidden"
+                                    : "rounded bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-950 dark:text-white dark:ring-gray-700 dark:hover:bg-gray-900"
+                                }
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-foreground">
-                          You currently have no web hooks added
-                        </p>
-                      )}
-                    </div>
+                      </div>
+                      <div className="mt-4">
+                        {data !== undefined && data.webhooks.length > 0 ? (
+                          <div className="flex flex-col gap-4">
+                            {data.webhooks.map((hook) => (
+                              <div
+                                key={hook.id}
+                                className="flex items-center space-x-3 rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm dark:border-gray-800 dark:bg-gray-950"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground">
+                                    {hook.name}
+                                  </p>
+                                  <p className="text-sm text-foreground truncate">
+                                    {hook.url} | {hook.type}
+                                  </p>
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => deleteHook(hook.id)}
+                                    type="button"
+                                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-foreground">
+                            You currently have no web hooks added
+                          </p>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -250,15 +250,17 @@ export default function Notifications() {
                                 checked={enabled}
                                 onChange={setEnabled}
                                 className={classNames(
-                                  enabled ? "bg-green-600" : "bg-gray-200",
-                                  "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                  enabled
+                                    ? "bg-green-600"
+                                    : "bg-gray-200 dark:bg-gray-700",
+                                  "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
                                 )}
                               >
                                 <span
                                   aria-hidden="true"
                                   className={classNames(
                                     enabled ? "translate-x-5" : "translate-x-0",
-                                    "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"
+                                    "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 dark:bg-gray-100",
                                   )}
                                 />
                               </Switch>

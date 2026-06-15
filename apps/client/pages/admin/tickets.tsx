@@ -115,12 +115,12 @@ function Table({ columns, data }: any) {
   return (
     <div className="overflow-x-auto md:-mx-6 lg:-mx-8">
       <div className="py-2 align-middle inline-block min-w-full md:px-6 lg:px-8">
-        <div className="shadow overflow-hidden border-b border-gray-200 md:rounded-lg">
+        <div className="overflow-hidden border-b border-gray-200 shadow dark:border-gray-800 md:rounded-lg">
           <table
             {...tableProps}
-            className="min-w-full divide-y divide-gray-200"
+            className="min-w-full divide-y divide-gray-200 dark:divide-gray-800"
           >
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               {headerGroups.map((headerGroup: any) => (
                 <tr
                   {...(headerGroup.getHeaderGroupProps() as HTMLAttributes<HTMLTableRowElement>)}
@@ -130,7 +130,7 @@ function Table({ columns, data }: any) {
                     column.hideHeader === false ? null : (
                       <th
                         {...(column.getHeaderProps() as ThHTMLAttributes<HTMLTableCellElement>)}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
                       >
                         {column.render("Header")}
                         {/* Render the columns filter UI */}
@@ -149,11 +149,11 @@ function Table({ columns, data }: any) {
                 return (
                   <tr
                     {...(row.getRowProps() as HTMLAttributes<HTMLTableRowElement>)}
-                    className="bg-white"
+                    className="bg-white dark:bg-gray-950"
                   >
                     {row.cells.map((cell: any) => (
                       <td
-                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
                         {...(cell.getCellProps() as TdHTMLAttributes<HTMLTableCellElement>)}
                       >
                         {cell.render("Cell")}
@@ -167,18 +167,18 @@ function Table({ columns, data }: any) {
 
           {data.length > 10 && (
             <nav
-              className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
+              className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950 sm:px-6"
               aria-label="Pagination"
             >
               <div className="hidden sm:block">
                 <div className="flex flex-row flex-nowrap w-full space-x-2">
-                  <p className="block text-sm font-medium text-gray-700 mt-4">
+                  <p className="mt-4 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Show
                   </p>
                   <select
                     id="location"
                     name="location"
-                    className="block w-full pl-3 pr-10 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    className="block w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 text-base text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white sm:text-sm"
                     value={pageSize}
                     onChange={(e) => {
                       setPageSize(Number(e.target.value));
@@ -194,7 +194,7 @@ function Table({ columns, data }: any) {
               </div>
               <div className="flex-1 flex justify-between sm:justify-end">
                 <button
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
                   type="button"
                   onClick={() => previousPage()}
                   disabled={!canPreviousPage}
@@ -202,7 +202,7 @@ function Table({ columns, data }: any) {
                   Previous
                 </button>
                 <button
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
                   type="button"
                   onClick={() => nextPage()}
                   disabled={!canNextPage}

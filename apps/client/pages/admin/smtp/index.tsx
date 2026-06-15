@@ -139,7 +139,7 @@ export default function Notifications() {
                 <div>
                   {!error ? (
                     <div>
-                      <div className="rounded-md bg-green-50 p-4">
+                      <div className="rounded-md bg-green-50 p-4 dark:bg-green-950/40">
                         <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
                           <div className="flex">
                             <div className="flex-shrink-0">
@@ -149,10 +149,10 @@ export default function Notifications() {
                               />
                             </div>
                             <div className="ml-3">
-                              <h3 className="text-sm font-medium text-green-800">
+                              <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
                                 SMTP Config Found & working
                               </h3>
-                              <div className="mt-2 text-sm text-green-700">
+                              <div className="mt-2 text-sm text-green-700 dark:text-green-300">
                                 <p>
                                   The config you supplied is working as
                                   intended.
@@ -170,9 +170,9 @@ export default function Notifications() {
                         </div>
                       </div>
 
-                      <div className="mt-4">
+                      <div className="mt-4 text-foreground">
                         <h1>Email Templates</h1>
-                        <table>
+                        <table className="w-full text-sm">
                           <tbody>
                             {templates.map((template) => (
                               <tr key={template.id}>
@@ -194,7 +194,7 @@ export default function Notifications() {
                     </div>
                   ) : (
                     <div>
-                      <div className="rounded-md bg-red-50 p-4">
+                      <div className="rounded-md bg-red-50 p-4 dark:bg-red-950/40">
                         <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
                           <div className="flex">
                             <div className="flex-shrink-0">
@@ -204,10 +204,10 @@ export default function Notifications() {
                               />
                             </div>
                             <div className="ml-3">
-                              <h3 className="text-sm font-medium text-red-800">
+                              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
                                 Authentication Error
                               </h3>
-                              <div className="mt-2 text-sm text-red-700">
+                              <div className="mt-2 text-sm text-red-700 dark:text-red-300">
                                 <p>
                                   {error?.message ||
                                     "An unknown error occurred."}
@@ -227,19 +227,19 @@ export default function Notifications() {
                       </div>
 
                       <div className="mt-2 ml-0.5 flex flex-col">
-                        <span className="text-sm font-semibold">
+                        <span className="text-sm font-semibold text-foreground">
                           Verification Status
                         </span>
-                        <span className="text-xs font-semibold">
+                        <span className="text-xs font-semibold text-foreground">
                           Code: {error && error.code}
                         </span>
-                        <span className="text-xs font-semibold">
+                        <span className="text-xs font-semibold text-foreground">
                           Code: {error && error.response}
                         </span>
-                        <span className="text-xs font-semibold">
+                        <span className="text-xs font-semibold text-foreground">
                           Code: {error && error.responseCode}
                         </span>
-                        <span className="text-xs font-semibold">
+                        <span className="text-xs font-semibold text-foreground">
                           Code: {error && error.command}
                         </span>
                       </div>
@@ -319,7 +319,7 @@ function GmailSettings({ setStep }: { setStep: (step: number) => void }) {
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [redirectUri, setRedirectUri] = useState(
-    `${window.location.origin}/admin/smtp/oauth`
+    `${window.location.origin}/admin/smtp/oauth`,
   );
   const [user, setUser] = useState("");
 

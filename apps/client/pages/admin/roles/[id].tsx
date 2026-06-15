@@ -236,13 +236,13 @@ export default function UpdateRole() {
               <CardTitle>Select Users</CardTitle>
               <div className="flex gap-2">
                 <button
-                  className="px-4 py-2 bg-gray-500 text-white rounded"
+                  className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-500"
                   onClick={() => setStep(1)}
                 >
                   Back
                 </button>
                 <button
-                  className="px-4 py-2 bg-green-500 text-white rounded"
+                  className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-500"
                   onClick={handleUpdateRole}
                   disabled={isLoading}
                 >
@@ -270,7 +270,7 @@ export default function UpdateRole() {
                   {filteredUsers.map((user) => (
                     <label
                       key={user.id}
-                      className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50"
+                      className="flex items-center space-x-2 rounded border border-gray-200 p-2 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900"
                     >
                       <input
                         type="checkbox"
@@ -293,7 +293,7 @@ export default function UpdateRole() {
               )}
 
               {!isLoading && filteredUsers.length === 0 && (
-                <div className="text-center py-4 text-gray-500">
+                <div className="py-4 text-center text-gray-500 dark:text-gray-300">
                   {searchTerm ? "No users found" : "No users available"}
                 </div>
               )}

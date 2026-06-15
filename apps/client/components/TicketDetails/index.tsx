@@ -927,16 +927,18 @@ export default function Ticket() {
                     </div>
                   </aside>
                   <div className="py-3 xl:pb-0 xl:pt-2 ">
-                    <div className="prose max-w-none mt-2">
+                    <div className="prose mt-2 max-w-none dark:prose-invert">
                       {!data.ticket.fromImap ? (
                         <>
-                          <BlockNoteView
-                            editor={editor}
-                            sideMenu={false}
-                            className="m-0 p-0 bg-transparent dark:text-white"
-                            onChange={handleInputChange}
-                            editable={!data.ticket.locked}
-                          />
+                          <div className="rounded-md bg-background text-foreground dark:bg-gray-950 dark:text-white">
+                            <BlockNoteView
+                              editor={editor}
+                              sideMenu={false}
+                              className="ticket-blocknote m-0 bg-transparent p-0 text-foreground dark:text-white"
+                              onChange={handleInputChange}
+                              editable={!data.ticket.locked}
+                            />
+                          </div>
                         </>
                       ) : (
                         <div className="">
@@ -1153,7 +1155,7 @@ export default function Ticket() {
                                   id="comment"
                                   name="comment"
                                   rows={3}
-                                  className="block w-full bg-secondary/50 dark:bg-secondary/50 rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-background focus:ring-0 focus:ring-inset focus:ring-gray-900 sm:text-sm sm:leading-6"
+                                  className="block w-full rounded-md border-0 bg-secondary/50 py-1.5 text-foreground shadow-sm ring-1 ring-inset ring-background focus:ring-0 focus:ring-inset focus:ring-gray-900 dark:bg-secondary/50 dark:text-white sm:text-sm sm:leading-6"
                                   placeholder={
                                     data.ticket.locked
                                       ? "This ticket is locked"
@@ -1187,9 +1189,9 @@ export default function Ticket() {
                                     disabled={data.ticket.locked}
                                     className={`inline-flex justify-center items-center gap-x-1.5 rounded-md ${
                                       data.ticket.locked
-                                        ? "bg-gray-300 cursor-not-allowed"
-                                        : "bg-white hover:bg-gray-50"
-                                    } px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300`}
+                                        ? "cursor-not-allowed bg-gray-300 dark:bg-gray-700"
+                                        : "bg-white hover:bg-gray-50 dark:bg-gray-950 dark:hover:bg-gray-900"
+                                    } px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 dark:text-white dark:ring-gray-700`}
                                   >
                                     <CheckCircleIcon
                                       className="-ml-0.5 h-5 w-5 text-red-500"
@@ -1210,9 +1212,9 @@ export default function Ticket() {
                                     disabled={data.ticket.locked}
                                     className={`inline-flex justify-center gap-x-1.5 rounded-md ${
                                       data.ticket.locked
-                                        ? "bg-gray-300 cursor-not-allowed"
-                                        : "bg-white hover:bg-gray-50"
-                                    } px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300`}
+                                        ? "cursor-not-allowed bg-gray-300 dark:bg-gray-700"
+                                        : "bg-white hover:bg-gray-50 dark:bg-gray-950 dark:hover:bg-gray-900"
+                                    } px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 dark:text-white dark:ring-gray-700`}
                                   >
                                     <CheckCircleIcon
                                       className="-ml-0.5 h-5 w-5 text-green-500"

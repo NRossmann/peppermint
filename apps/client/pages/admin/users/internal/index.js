@@ -17,7 +17,7 @@ const fetchUsers = async (token) => {
       Authorization: `Bearer ${token}`,
     },
   });
-  
+
   return res.json();
 };
 
@@ -53,7 +53,7 @@ function Table({ columns, data }) {
             : true;
         }),
     }),
-    []
+    [],
   );
 
   const defaultColumn = React.useMemo(
@@ -61,7 +61,7 @@ function Table({ columns, data }) {
       // Let's set up our default Filter UI
       Filter: DefaultColumnFilter,
     }),
-    []
+    [],
   );
 
   const {
@@ -90,18 +90,18 @@ function Table({ columns, data }) {
     },
     useFilters, // useFilters!
     useGlobalFilter,
-    usePagination
+    usePagination,
   );
 
   return (
     <div className="overflow-x-auto md:-mx-6 lg:-mx-8">
       <div className="py-2 align-middle inline-block min-w-full md:px-6 lg:px-8">
-        <div className="shadow overflow-hidden border-b border-gray-200 md:rounded-lg">
+        <div className="overflow-hidden border-b border-gray-200 shadow dark:border-gray-800 md:rounded-lg">
           <table
             {...getTableProps()}
-            className="min-w-full divide-y divide-gray-200"
+            className="min-w-full divide-y divide-gray-200 dark:divide-gray-800"
           >
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-900">
               {headerGroups.map((headerGroup) => (
                 <tr
                   {...headerGroup.getHeaderGroupProps()}
@@ -111,7 +111,7 @@ function Table({ columns, data }) {
                     column.hideHeader === false ? null : (
                       <th
                         {...column.getHeaderProps()}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
                       >
                         {column.render("Header")}
                         {/* Render the columns filter UI */}
@@ -119,7 +119,7 @@ function Table({ columns, data }) {
                           {column.canFilter ? column.render("Filter") : null}
                         </div>
                       </th>
-                    )
+                    ),
                   )}
                 </tr>
               ))}
@@ -128,10 +128,13 @@ function Table({ columns, data }) {
               {page.map((row, i) => {
                 prepareRow(row);
                 return (
-                  <tr {...row.getRowProps()} className="bg-white">
+                  <tr
+                    {...row.getRowProps()}
+                    className="bg-white dark:bg-gray-950"
+                  >
                     {row.cells.map((cell) => (
                       <td
-                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white"
                         {...cell.getCellProps()}
                       >
                         {cell.render("Cell")}
@@ -145,21 +148,21 @@ function Table({ columns, data }) {
 
           {data.legnth > 10 && (
             <nav
-              className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
+              className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950 sm:px-6"
               aria-label="Pagination"
             >
               <div className="hidden sm:block">
                 <div className="flex flex-row flex-nowrap w-full space-x-2">
                   <p
                     htmlFor="location"
-                    className="block text-sm font-medium text-gray-700 mt-4"
+                    className="mt-4 block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Show
                   </p>
                   <select
                     id="location"
                     name="location"
-                    className="block w-full pl-3 pr-10 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    className="block w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 text-base text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white sm:text-sm"
                     value={pageSize}
                     onChange={(e) => {
                       setPageSize(Number(e.target.value));
@@ -175,7 +178,7 @@ function Table({ columns, data }) {
               </div>
               <div className="flex-1 flex justify-between sm:justify-end">
                 <button
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
                   type="button"
                   onClick={() => previousPage()}
                   disabled={!canPreviousPage}
@@ -183,7 +186,7 @@ function Table({ columns, data }) {
                   Previous
                 </button>
                 <button
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                  className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
                   type="button"
                   onClick={() => nextPage()}
                   disabled={!canNextPage}
@@ -202,7 +205,7 @@ function Table({ columns, data }) {
 export default function UserAuthPanel() {
   const token = getCookie("session");
   const { data, status, refetch } = useQuery("fetchAuthUsers", () =>
-    fetchUsers(token)
+    fetchUsers(token),
   );
 
   async function deleteUser(id) {
@@ -257,7 +260,7 @@ export default function UserAuthPanel() {
         },
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -272,14 +275,14 @@ export default function UserAuthPanel() {
           <div className="px-4 sm:px-6 md:px-0">
             <div className="sm:flex sm:items-center">
               <div className="sm:flex-auto mt-4">
-                <p className="mt-2 text-sm text-gray-700  dark:text-white">
+                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                   A list of all internal users of your instance.
                 </p>
               </div>
               <div className="sm:ml-16 mt-5 sm:flex-none">
                 <Link
                   href="/admin/users/internal/new"
-                  className="rounded bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  className="rounded bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-950 dark:text-white dark:ring-gray-700 dark:hover:bg-gray-900"
                 >
                   New User
                 </Link>
@@ -310,19 +313,19 @@ export default function UserAuthPanel() {
                     {data.users.map((user) => (
                       <div
                         key={user.id}
-                        className="flex flex-col text-center bg-white rounded-lg shadow mt-4"
+                        className="mt-4 flex flex-col rounded-lg bg-white text-center shadow dark:bg-gray-950"
                       >
                         <div className="flex-1 flex flex-col p-8">
-                          <h3 className=" text-gray-900 text-sm font-medium">
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                             {user.name}
                           </h3>
                           <dl className="mt-1 flex-grow flex flex-col justify-between">
-                            <dd className="text-gray-500 text-sm">
+                            <dd className="text-sm text-gray-500 dark:text-gray-300">
                               {user.email}
                             </dd>
                             <dt className="sr-only">Role</dt>
                             <dd className="mt-3">
-                              <span className="px-2 py-1 text-green-800 text-xs font-medium bg-green-100 rounded-full">
+                              <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-950/40 dark:text-green-200">
                                 {user.isAdmin ? "admin" : "user"}
                               </span>
                             </dd>

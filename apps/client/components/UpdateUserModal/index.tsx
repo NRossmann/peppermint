@@ -48,7 +48,7 @@ export default function UpdateUserModal({ user }) {
       <button
         onClick={() => setOpen(true)}
         type="button"
-        className="inline-flex items-center px-4 py-1.5 border font-semibold border-gray-300 shadow-sm text-xs rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="inline-flex items-center rounded border border-gray-300 bg-white px-4 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
       >
         Role
       </button>
@@ -87,11 +87,11 @@ export default function UpdateUserModal({ user }) {
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div className="inline-block transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all dark:bg-gray-950 sm:my-8 sm:w-full sm:max-w-lg sm:align-middle sm:p-6">
                 <div className="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
                   <button
                     type="button"
-                    className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-950"
                     onClick={() => setOpen(false)}
                   >
                     <span className="sr-only">Close</span>
@@ -102,7 +102,7 @@ export default function UpdateUserModal({ user }) {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <Dialog.Title
                       as="h3"
-                      className="text-lg leading-6 font-medium text-gray-900"
+                      className="text-lg leading-6 font-medium text-gray-900 dark:text-white"
                     >
                       Edit User Role
                     </Dialog.Title>
@@ -115,8 +115,8 @@ export default function UpdateUserModal({ user }) {
                               type="button"
                               className={
                                 admin === false
-                                  ? "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-green-500 text-sm font-medium text-white hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
-                                  : "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
+                                  ? "relative inline-flex items-center border border-gray-300 bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-400 focus:z-10 focus:outline-none focus:ring-1 dark:border-gray-700"
+                                  : "relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
                               }
                             >
                               User
@@ -126,8 +126,8 @@ export default function UpdateUserModal({ user }) {
                               type="button"
                               className={
                                 admin === true
-                                  ? "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-green-500 text-sm font-medium text-white hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
-                                  : "relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1"
+                                  ? "relative inline-flex items-center border border-gray-300 bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-400 focus:z-10 focus:outline-none focus:ring-1 dark:border-gray-700"
+                                  : "relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:z-10 focus:outline-none focus:ring-1 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:hover:bg-gray-900"
                               }
                             >
                               Admin
