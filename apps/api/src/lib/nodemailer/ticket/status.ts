@@ -1,5 +1,6 @@
 import handlebars from "handlebars";
 import { prisma } from "../../../prisma";
+import { buildTicketTemplateContext } from "./templateContext";
 import { createTransportProvider } from "../transport";
 
 export async function sendTicketStatus(ticket: any) {
@@ -19,11 +20,10 @@ export async function sendTicketStatus(ticket: any) {
       },
     });
 
-    var template = handlebars.compile(testhtml?.html);
-    var replacements = {
-      title: ticket.title,
+    var template = handlebars.compile(testhtml?.html || "");
+    var replacements = buildTicketTemplateContext(ticket, {
       status: stateName.toUpperCase(),
-    };
+    });
     var htmlToSend = template(replacements);
 
     await transport

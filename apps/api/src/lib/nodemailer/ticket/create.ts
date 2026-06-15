@@ -1,5 +1,6 @@
 import handlebars from "handlebars";
 import { prisma } from "../../../prisma";
+import { buildTicketTemplateContext } from "./templateContext";
 import { createTransportProvider } from "../transport";
 
 export async function sendTicketCreate(ticket: any) {
@@ -15,10 +16,8 @@ export async function sendTicketCreate(ticket: any) {
         },
       });
 
-      var template = handlebars.compile(testhtml?.html);
-      var replacements = {
-        id: ticket.id,
-      };
+      var template = handlebars.compile(testhtml?.html || "");
+      var replacements = buildTicketTemplateContext(ticket);
       var htmlToSend = template(replacements);
 
       await transport

@@ -6,11 +6,22 @@ import "prismjs/components/prism-clike";
 import { useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
 
+const sharedTicketVariables = [
+  "{{id}}",
+  "{{title}}",
+  "{{status}}",
+  "{{comment}}",
+  "{{ticket_url}}",
+  "{{assignedTo}}",
+  "{{ticket_priority}}",
+  "{{ticket_requester}}",
+];
+
 const templateVariables: Record<string, string[]> = {
-  ticket_created: ["{{id}}"],
-  ticket_comment: ["{{title}}", "{{comment}}"],
-  ticket_status_changed: ["{{title}}", "{{status}}"],
-  ticket_assigned: [],
+  ticket_created: sharedTicketVariables,
+  ticket_comment: sharedTicketVariables,
+  ticket_status_changed: sharedTicketVariables,
+  ticket_assigned: sharedTicketVariables,
 };
 
 const templateLabels: Record<string, string> = {

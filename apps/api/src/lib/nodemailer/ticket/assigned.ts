@@ -1,10 +1,10 @@
 import handlebars from "handlebars";
 import { prisma } from "../../../prisma";
+import { buildTicketTemplateContext } from "./templateContext";
 import { createTransportProvider } from "../transport";
 
-export async function sendAssignedEmail(email: any) {
+export async function sendAssignedEmail(email: any, ticket: any) {
   try {
-
     const provider = await prisma.email.findFirst();
 
     if (provider) {
@@ -18,15 +18,15 @@ export async function sendAssignedEmail(email: any) {
         },
       });
 
-      var template = handlebars.compile(testhtml?.html);
-      var htmlToSend = template({}); // Pass an empty object as the argument to the template function
+      var template = handlebars.compile(testhtml?.html || "");
+      var htmlToSend = template(buildTicketTemplateContext(ticket));
 
       await mail
         .sendMail({
-          from: provider?.reply, 
-          to: email, 
-          subject: `A new ticket has been assigned to you`, 
-          text: `Hello there, a ticket has been assigned to you`, 
+          from: provider?.reply,
+          to: email,
+          subject: `A new ticket has been assigned to you: ${ticket?.title || ticket?.id || ""}`,
+          text: `Hello there, ticket ${ticket?.title || ticket?.id || ""} has been assigned to you`,
           html: htmlToSend,
         })
         .then((info: any) => {

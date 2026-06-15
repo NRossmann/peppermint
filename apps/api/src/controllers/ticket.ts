@@ -169,7 +169,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           },
         });
 
-        await sendAssignedEmail(assgined!.email);
+        await sendAssignedEmail(assgined!.email, ticket);
 
         await assignedNotification(engineer, ticket, user);
       }
@@ -285,7 +285,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           },
         });
 
-        await sendAssignedEmail(assgined!.email);
+        await sendAssignedEmail(assgined!.email, ticket);
 
         const user = await checkSession(request);
 
@@ -575,11 +575,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
           ...(type ? { type } : {}),
           ...(nextState ? { stateId: nextState.id } : {}),
         },
-        include: {
-          state: {
-            select: ticketStateSelect,
-          },
-        },
+        include: ticketInclude,
       });
 
       if (priority && issue.priority !== priority) {
@@ -633,9 +629,10 @@ export function ticketRoutes(fastify: FastifyInstance) {
 
         const ticket = await prisma.ticket.findUnique({
           where: { id: id },
+          include: ticketInclude,
         });
 
-        await sendAssignedEmail(email);
+        await sendAssignedEmail(email, ticket);
         await assignedNotification(assigned, ticket, assigner);
       } else {
         await prisma.ticket.update({
@@ -752,12 +749,13 @@ export function ticketRoutes(fastify: FastifyInstance) {
         where: {
           id: id,
         },
+        include: ticketInclude,
       });
 
       //@ts-expect-error
-      const { email, title } = ticket;
+      const { email } = ticket;
       if (public_comment && email) {
-        sendComment(text, title, ticket!.id, email!);
+        sendComment(text, ticket);
       }
 
       await commentNotification(ticket, user);
@@ -847,11 +845,7 @@ export function ticketRoutes(fastify: FastifyInstance) {
         data: {
           stateId: nextState.id,
         },
-        include: {
-          state: {
-            select: ticketStateSelect,
-          },
-        },
+        include: ticketInclude,
       });
 
       if (existingTicket.state?.id !== nextState.id) {

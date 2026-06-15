@@ -1,13 +1,9 @@
 import handlebars from "handlebars";
 import { prisma } from "../../../prisma";
+import { buildTicketTemplateContext } from "./templateContext";
 import { createTransportProvider } from "../transport";
 
-export async function sendComment(
-  comment: string,
-  title: string,
-  id: string,
-  email: string
-) {
+export async function sendComment(comment: string, ticket: any) {
   try {
     const provider = await prisma.email.findFirst();
 
@@ -19,20 +15,23 @@ export async function sendComment(
       },
     });
 
-    var template = handlebars.compile(testhtml?.html);
-    var replacements = {
-      title: title,
-      comment: comment,
-    };
+    if (!ticket?.email) {
+      return;
+    }
+
+    var template = handlebars.compile(testhtml?.html || "");
+    var replacements = buildTicketTemplateContext(ticket, {
+      comment,
+    });
     var htmlToSend = template(replacements);
 
-    console.log("Sending email to: ", email);
+    console.log("Sending email to: ", ticket.email);
     await transport
       .sendMail({
         from: provider?.reply,
-        to: email,
-        subject: `New comment on Issue #${title} ref: #${id}`,
-        text: `Hello there, Issue #${title}, has had an update with a comment of ${comment}`,
+        to: ticket.email,
+        subject: `New comment on Issue #${ticket.title} ref: #${ticket.Number || ticket.id}`,
+        text: `Hello there, Issue #${ticket.title}, has had an update with a comment of ${comment}`,
         html: htmlToSend,
       })
       .then((info: any) => {
